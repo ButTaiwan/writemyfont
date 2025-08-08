@@ -1,0 +1,252 @@
+body {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	/*height: 80vh;*/
+	background-color: #f0f0f0;
+	font-family: sans-serif;
+	overflow: hidden;
+	user-select: none;
+	/* 禁用文字選擇 */
+	-webkit-touch-callout: none;
+	/* 禁用長按彈出選單 */
+	-webkit-user-select: none;
+	/* 禁用文字選擇 */
+	-webkit-tap-highlight-color: transparent;
+	/* 移除點擊高亮效果 */
+}
+
+@font-face {
+	font-family: LessonOne;
+	src: url('../fonts/LessonOne-Regular.woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: GenYoExt;
+	src: url('../fonts/GenYoExt3-R.woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+#demo-container {
+	margin-bottom: 5px;
+	width: 360px;
+	position: relative;
+	color: #1123c4;
+	text-align: center;
+	font-family: sans-serif;
+	height: 5.6em;
+	margin: 10px auto
+}
+
+#demo-container span {
+	display: block;
+	line-height: 1.2;
+}
+
+#glyphName {
+	font-family: Consolas, monospace;
+	color: #aaa
+}
+
+#demo-container #charSeq {
+	font-size: 2.6em;
+	line-height: 1;
+	margin: 0 auto 10px auto;
+	width: 1em;
+	font-family: GenYoExt, LessonOne, sans-serif;
+	border: 1px solid #aaa;
+}
+
+#demo-container #charSeq.vert {
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	font-feature-settings: "vert"
+}
+
+#prevButton {
+	font-size: 3.2em;
+	position: absolute;
+	left: 0;
+	top: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
+#nextButton {
+	font-size: 3.2em;
+	position: absolute;
+	right: 0;
+	top: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none
+}
+
+#canvas-container {
+	position: relative;
+	width: 360px;
+	height: 360px;
+	border: 1px solid #888;
+	background-color: #fff;
+	align-self: center;
+}
+
+canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 360px;
+	height: 360px;
+	touch-action: none;
+}
+
+@media screen and (max-height: 750px),
+screen and (max-width: 380px) {
+	#canvas-container {
+		width: 300px;
+		height: 300px
+	}
+
+	canvas {
+		width: 300px;
+		height: 300px;
+		touch-action: none;
+	}
+}
+
+.smallmode {
+	width: 200px !important;
+	height: 200px !important
+}
+
+.smallmode canvas {
+	width: 200px;
+	height: 200px;
+	touch-action: none;
+}
+
+#gridCanvas {
+	z-index: 0
+}
+
+/* 九宮格底圖在下方 */
+#drawingCanvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1
+}
+
+/* 繪圖畫布在上方 */
+#lineWidthSlider {
+	width: 120px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+#lineWidthValue {
+	display: inline-block;
+	width: 1.5em;
+	text-align: right;
+}
+
+#brushSelector img {
+	width: 28px;
+	height: 28px;
+	line-height: 32px;
+	margin-top: 2px;
+}
+
+#navi-container {
+	display: flex;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	padding: 0 .2rem;
+	font-size: .8rem;
+}
+
+#navi-container #spanDoneCount {
+	margin-right: .2rem;
+}
+
+#progress-container {
+	display: none;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	background-color: #fff;
+	padding: 10px;
+	text-align: center;
+	box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+	z-index: 1056;
+}
+
+#progress-bar {
+	width: 80%;
+	height: 20px;
+	display: block;
+	margin: 0 auto;
+}
+
+.note {
+	display: block;
+	color: #323232;
+	font-size: .9em;
+}
+
+#listup-body svg {
+	display: block;
+	background-color: #fff;
+	width: 50px;
+	height: 50px;
+	float: left;
+	border: 1px solid #ccc;
+	margin: 5px
+}
+
+#listup-body span {
+	display: block;
+	background-color: #666;
+	color: #ddd;
+	width: 50px;
+	height: 50px;
+	float: left;
+	border: 1px solid #ccc;
+	line-height: 50px;
+	text-align: center;
+	font-size: 2em;
+	margin: 5px;
+	font-family: GenYoExt, LessonOne, sans-serif;
+	overflow: hidden;
+}
+
+#listup-body span.vert {
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	font-feature-settings: "vert"
+}
+
+#hintContent {
+	padding: 0 1.2em
+}
+
+#hintContent li {
+	margin: 10px 0;
+	line-height: 1.6;
+}
+
+.nav-link {
+	color: #000;
+}
+
+#importDataFile {
+	display: none;
+}

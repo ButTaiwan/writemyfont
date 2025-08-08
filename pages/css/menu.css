@@ -1,0 +1,32 @@
+#menu {
+    background-color: #fff;
+    overflow-x: auto;
+    width: calc(100vw - 1rem);
+    margin: .5rem;
+}
+
+#menu>div {
+    display: none;
+    width: max-content;
+}
+
+#menu>div.active {
+    display: inline-flex;
+}
+
+#menu .block {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: #cacaca solid 1px;
+}
+
+#menu .block>span {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    margin-top: 0.1rem;
+    opacity: 0.8;
+    font-size: 0.8em;
+    margin-top: auto;
+}
