@@ -1,0 +1,26 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log*
+.env
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Custom log files
+logs/
+*.log
+
+dist

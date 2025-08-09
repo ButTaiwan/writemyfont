@@ -1,0 +1,24 @@
+{
+    "name": "writemyfont",
+    "version": "1.0.0",
+    "description": "FontDrawer 是一個基於 HTML5 Canvas 的字型繪製工具，允許使用者自由繪製字型並生成 OTF 字型檔案。此工具有繁體中文與日文兩個版本，並提供自動化功能以簡化手寫字型的生成過程。",
+    "private": true,
+    "scripts": {
+        "dev": "webpack-dev-server --mode development",
+        "build": "webpack --config webpack.config.js --mode production"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "css-loader": "^7.1.2",
+        "html-webpack-plugin": "^5.6.3",
+        "mini-css-extract-plugin": "^2.9.3",
+        "style-loader": "^4.0.0",
+        "webpack": "^5.101.0",
+        "webpack-cli": "^6.0.1",
+        "webpack-dev-server": "^5.2.2"
+    },
+    "dependencies": {
+        "@zainulbr/i18n-webpack-plugin": "^2.0.3"
+    }
+}

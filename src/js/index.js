@@ -1,3 +1,12 @@
+// css
+import "../css/style.css";
+import "../css/menu.css";
+
+// js
+import "./menu.js";
+import Potrace from "./potrace.js";
+import "./pressure-drawing.js";
+
 const version = '0.592'; // 版本號
 const upm = 1000;
 const userAgent = navigator.userAgent.toLowerCase();
@@ -158,9 +167,9 @@ async function loadSettings() {
 
 	if (settings.customGlyphs && settings.customGlyphs != '') {	// 如果有自定義文字，則添加到列表中
 		var cglist = settings.customGlyphs.split(/,/);
-		glyphList[fdrawer.customList] = [];
+		window.glyphList[__("customList")] = [];
 		for (var i = 0; i < cglist.length; i++) {
-			glyphList[fdrawer.customList].push(cglist[i]);
+			window.glyphList[__("customList")].push(cglist[i]);
 			var uni = parseInt(cglist[i].replace(/^u(ni)?/g, ''), 16);
 			glyphMap[cglist[i]] = { c: String.fromCodePoint(uni), w: 'F' };	// 將自定義文字添加到映射中
 		}
@@ -287,7 +296,7 @@ async function initCanvas(canvas) {
 
 function initListSelect($listSelect) {
 	$listSelect.empty(); // 清空選單
-	for (var list in glyphList) {
+	for (var list in window.glyphList) {
 		$listSelect.append(
 			$('<option></option>').val(list).text(list)
 		);
@@ -433,7 +442,7 @@ $(document).ready(async function () {
 	$listSelect.on('change', function () {
 		const selectedValue = $(this).val();
 		if (selectedValue) {
-			nowList = glyphList[selectedValue];
+			nowList = window.glyphList[selectedValue];
 			nowGlyphIndex = 0; // 重置當前字形索引
 			setGlyph(0);
 		}
@@ -513,16 +522,16 @@ $(document).ready(async function () {
 	$('#nextButton').on('click', function () { setGlyph(nowGlyphIndex + 1); }); // 切換到下一個字符
 
 	$('#findButton').on('click', function () {
-		var char = prompt(fdrawer.findMsg);
+		var char = prompt(__("findMsg"));
 		if (!char) return; // 如果沒有輸入字符，則不進行任何操作
 		char = char.trim(); // 去除前後空白
 		if (char.length === 0) return;
 
 		var breakFlag = false;
-		for (let i in glyphList) {
-			for (let j in glyphList[i]) {
-				if (glyphMap[glyphList[i][j]].c == char) {
-					nowList = glyphList[i];
+		for (let i in window.glyphList) {
+			for (let j in window.glyphList[i]) {
+				if (glyphMap[window.glyphList[i][j]].c == char) {
+					nowList = window.glyphList[i];
 					$listSelect.val(i); 	// 更新下拉選單的值
 					setGlyph(j * 1);
 					breakFlag = true;
@@ -535,25 +544,25 @@ $(document).ready(async function () {
 		// 找不到的話詢問要不要新增這個字
 		if (!breakFlag) {
 			if (char.length == (char.codePointAt(0) < 65536 ? 1 : 2)) {
-				if (confirm(fdrawer.notFound + '\n' + fdrawer.confirmAdd)) {
+				if (confirm(__("notFound") + '\n' + __("confirmAdd"))) {
 					var uni = char.codePointAt(0).toString(16).toUpperCase();
 					var gn = uni.length <= 4 ? 'uni' + uni.padStart(4, '0') : 'u' + uni; // 生成 Unicode 名稱
 					var chr = String.fromCodePoint(char.codePointAt(0));
 
-					if (!glyphList[fdrawer.customList]) {
-						glyphList[fdrawer.customList] = [];
+					if (!window.glyphList[__("customList")]) {
+						window.glyphList[__("customList")] = [];
 						initListSelect($listSelect); // 重新初始化下拉選單
 					}
-					glyphList[fdrawer.customList].push(gn); // 將新字符添加到自定義列表
+					window.glyphList[__("customList")].push(gn); // 將新字符添加到自定義列表
 					glyphMap[gn] = { c: chr, w: 'F' };	// 將自定義文字添加到映射中
-					updateSetting('customGlyphs', glyphList[fdrawer.customList].join(',')); // 儲存自定義字符
+					updateSetting('customGlyphs', window.glyphList[__("customList")].join(',')); // 儲存自定義字符
 
-					nowList = glyphList[fdrawer.customList];
-					$listSelect.val(fdrawer.customList); 	// 更新下拉選單的值
-					setGlyph(glyphList[fdrawer.customList].length - 1);
+					nowList = window.glyphList[__("customList")];
+					$listSelect.val(__("customList")); 	// 更新下拉選單的值
+					setGlyph(window.glyphList[__("customList")].length - 1);
 				}
 			} else {
-				alert(fdrawer.notFound);
+				alert(__("notFound"));
 			}
 		}
 	});
@@ -616,7 +625,6 @@ $(document).ready(async function () {
 			if (eventType.includes('pointer')) hasPointerEvent = true; 		// 這個筆畫有pointer事件
 		} else if (mode == 'end') {
 			simulatePressure = false;
-			hasTouchEvent = false;
 			hasRealPressure = false;
 			hasPointerEvent = false;
 		}
@@ -1078,7 +1086,7 @@ $(document).ready(async function () {
 
 	// 顯示設定畫面
 	function updateSettingsContainer() {
-		$('#settings-title').text(settings.notNewFlag ? fdrawer.settingsTitle : fdrawer.welcomeTitle);
+		$('#settings-title').text(settings.notNewFlag ? __("settingsTitle") : __("welcomeTitle"));
 		$('#span-welcome').toggle(!settings.notNewFlag);
 
 		$('#fontNameEng').val(settings.fontNameEng);
@@ -1189,7 +1197,7 @@ $(document).ready(async function () {
 			link.href = window.URL.createObjectURL(blob);
 			link.click();
 		} else {
-			alert(fdrawer.noDataToExport);
+			alert(__("noDataToExport"));
 		}
 	});
 
@@ -1208,14 +1216,14 @@ $(document).ready(async function () {
 				link.href = window.URL.createObjectURL(blob);
 				link.click();
 			} else {
-				alert(fdrawer.noDataToExport);
+				alert(__("noDataToExport"));
 			}
 		};
 	});
 
 	// 匯入資料
 	$('#importDataFile').on('change', async function () {
-		if (confirm(fdrawer.importConfirm)) {
+		if (confirm(__("importConfirm"))) {
 			const fileInput = $(this);
 			const file = fileInput[0].files[0];
 			if (file) {
@@ -1232,7 +1240,7 @@ $(document).ready(async function () {
 						const value = parts[1].trim();
 						await saveToDB(key, value);
 					}
-					alert(fdrawer.importDone);
+					alert(__("importDone"));
 					location.reload(); // 重新載入頁面
 				};
 				reader.readAsText(file);
@@ -1244,9 +1252,9 @@ $(document).ready(async function () {
 
 	// 修改清除所有資料的功能
 	$('#clearAllButton').on('click', async function () {
-		if (confirm(fdrawer.clearConfirm)) {
+		if (confirm(__("clearConfirm"))) {
 			await clearDB();
-			alert(fdrawer.clearDone);
+			alert(__("clearDone"));
 			location.reload(); // 重新載入頁面
 		}
 	});
@@ -1258,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	if (/FBAN|FBAV|Instagram|Line|Threads/i.test(userAgent)) {
 		// 如果是 Facebook、Instagram 或 Line 的 in-app browser
-		alert(fdrawer.inAppNotice);
+		alert(__("inAppNotice"));
 	}
 
 	// 解決 iOS Safari 按鈕點兩下容易不小心放大視窗的問題

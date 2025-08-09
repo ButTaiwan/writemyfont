@@ -1,0 +1,23 @@
+{
+  "title": "フォントを書こう！ by 字嗨",
+  "file": "ファイル",
+  "common": "よく使う",
+  "brush": "ブラシ",
+  "display": "画面",
+  "help": "ヘルプ",
+  "save": "保存",
+  "open": "開く",
+  "export": "エクスポート",
+  "findMsg": "探したい文字をご入力ください：",
+  "notFound": "該当グリフが見つかりません。",
+  "confirmAdd": "ユーザー文字リストに追加しますか？",
+  "noDataToExport": "データがありません。",
+  "importConfirm": "編集中のデータが削除されます。データの読み込みしますか？",
+  "importDone": "読み込みしました",
+  "clearConfirm": "編集中のデータを破棄しますか？",
+  "clearDone": "削除しました",
+  "welcomeTitle": "ようこそ",
+  "settingsTitle": "フォント設定",
+  "inAppNotice": "アプリの組み込みブラウザを利用しているようです。\nシステムブラウザで開くことがおすすめです。",
+  "customList": "ユーザー文字リスト"
+}

@@ -1,0 +1,23 @@
+{
+  "title": "手寫字型產生器 by 字嗨",
+  "file": "檔案",
+  "common": "常用",
+  "brush": "筆刷",
+  "display": "顯示",
+  "help": "說明",
+  "save": "儲存",
+  "open": "開啟",
+  "export": "匯出",
+  "findMsg": "請輸入要找的文字：",
+  "notFound": "查無此字符！",
+  "confirmAdd": "請問要新增到使用者字表嗎？",
+  "noDataToExport": "沒有可匯出的資料。",
+  "importConfirm": "確定要匯入資料嗎？這將清除目前編輯中的所有資料。",
+  "importDone": "匯入完成。",
+  "clearConfirm": "確定要清除所有寫過的字嗎？清除後無法復原！！！",
+  "clearDone": "已清除。",
+  "welcomeTitle": "歡迎使用手寫字型產生器！",
+  "settingsTitle": "字型設定",
+  "inAppNotice": "請使用裝置瀏覽器開啟以獲得最佳使用體驗。",
+  "customList": "使用者字表"
+}

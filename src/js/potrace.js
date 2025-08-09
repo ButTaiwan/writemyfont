@@ -1302,3 +1302,5 @@ var Potrace = (function() {
     img: imgElement
   };
 })();
+
+export default Potrace;
