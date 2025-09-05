@@ -1,173 +1,407 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>手寫字型產生器 by 字嗨</title>
-	<link rel="stylesheet" href="style.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>手寫字型產生器 by 字嗨</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+	<link rel="stylesheet" href="css/menu.css">
+	<link rel="stylesheet" href="css/style.css">
 </head>
 <body lang="zh-TW">
-	<div id="list-container">
-		<label for="listSelect">字表：</label>
-		<select id="listSelect"></select>
-		<span class="butt" id="canvasListButton">👓</span>
-		<span class="butt" id="findButton">🔍</span>
-    </div>
-
-    <div id="demo-container">
+	<div id="menu_nav">
+		<ul class="nav nav-underline px-2">
+			<li class="nav-item">
+				<div class="nav-link">檔案</div>
+			</li>
+			<li class="nav-item">
+				<div class="nav-link">字型</div>
+			</li>
+			<li class="nav-item">
+				<div class="nav-link active">常用</div>
+			</li>
+			<li class="nav-item">
+				<div class="nav-link">筆刷</div>
+			</li>
+			<li class="nav-item">
+				<div class="nav-link">顯示</div>
+			</li>
+			<li class="nav-item">
+				<div class="nav-link">說明</div>
+			</li>
+		</ul>
+	</div>
+	<div id="menu" class="p-2 rounded-4 shadow-sm bg-white">
+		<div>
+			<div class="block px-1">
+				<div class="d-flex gap-1">
+					<button type="button" id="exportDataButton" class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M219.31,72,184,36.69A15.86,15.86,0,0,0,172.69,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V83.31A15.86,15.86,0,0,0,219.31,72ZM168,208H88V152h80Zm40,0H184V152a16,16,0,0,0-16-16H88a16,16,0,0,0-16,16v56H48V48H172.69L208,83.31ZM160,72a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h56A8,8,0,0,1,160,72Z"></path></svg>
+						儲存
+					</button>
+					<label class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M245,110.64A16,16,0,0,0,232,104H216V88a16,16,0,0,0-16-16H130.67L102.94,51.2a16.14,16.14,0,0,0-9.6-3.2H40A16,16,0,0,0,24,64V208h0a8,8,0,0,0,8,8H211.1a8,8,0,0,0,7.59-5.47l28.49-85.47A16.05,16.05,0,0,0,245,110.64ZM93.34,64,123.2,86.4A8,8,0,0,0,128,88h72v16H69.77a16,16,0,0,0-15.18,10.94L40,158.7V64Zm112,136H43.1l26.67-80H232Z"></path></svg>
+						開啟
+						<input type="file" id="importDataFile" accept=".txt" />
+					</label>
+					<button type="button" class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#download_container">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"></path></svg>
+						匯出字型檔
+					</button>
+				</div>
+				<span>文件</span>
+			</div>
+			<div class="block px-1">
+				<div>
+					<button type="button" class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2" id="exportEventsButton">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M144,92a12,12,0,1,1,12,12A12,12,0,0,1,144,92ZM100,80a12,12,0,1,0,12,12A12,12,0,0,0,100,80Zm116,64A87.76,87.76,0,0,1,213,167l22.24,9.72A8,8,0,0,1,232,192a7.89,7.89,0,0,1-3.2-.67L207.38,182a88,88,0,0,1-158.76,0L27.2,191.33A7.89,7.89,0,0,1,24,192a8,8,0,0,1-3.2-15.33L43,167A87.76,87.76,0,0,1,40,144v-8H16a8,8,0,0,1,0-16H40v-8a87.76,87.76,0,0,1,3-23L20.8,79.33a8,8,0,1,1,6.4-14.66L48.62,74a88,88,0,0,1,158.76,0l21.42-9.36a8,8,0,0,1,6.4,14.66L213,89.05a87.76,87.76,0,0,1,3,23v8h24a8,8,0,0,1,0,16H216ZM56,120H200v-8a72,72,0,0,0-144,0Zm64,95.54V136H56v8A72.08,72.08,0,0,0,120,215.54ZM200,144v-8H136v79.54A72.08,72.08,0,0,0,200,144Z"></path></svg>
+						匯出系統事件
+					</button>
+				</div>
+				<span>開發</span>
+			</div>
+		</div>
+		<div>
+			<div class="block px-1">
+				<div class="d-flex gap-1">
+					<button type="button" class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#settings_container">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"></path></svg>
+						輸出設定
+					</button>
+					<button type="button" class="btn btn-outline-danger d-flex flex-column justify-content-center align-items-center gap-2" id="clearAllButton">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M235.5,216.81c-22.56-11-35.5-34.58-35.5-64.8V134.73a15.94,15.94,0,0,0-10.09-14.87L165,110a8,8,0,0,1-4.48-10.34l21.32-53a28,28,0,0,0-16.1-37,28.14,28.14,0,0,0-35.82,16,.61.61,0,0,0,0,.12L108.9,79a8,8,0,0,1-10.37,4.49L73.11,73.14A15.89,15.89,0,0,0,55.74,76.8C34.68,98.45,24,123.75,24,152a111.45,111.45,0,0,0,31.18,77.53A8,8,0,0,0,61,232H232a8,8,0,0,0,3.5-15.19ZM67.14,88l25.41,10.3a24,24,0,0,0,31.23-13.45l21-53c2.56-6.11,9.47-9.27,15.43-7a12,12,0,0,1,6.88,15.92L145.69,93.76a24,24,0,0,0,13.43,31.14L184,134.73V152c0,.33,0,.66,0,1L55.77,101.71A108.84,108.84,0,0,1,67.14,88Zm48,128a87.53,87.53,0,0,1-24.34-42,8,8,0,0,0-15.49,4,105.16,105.16,0,0,0,18.36,38H64.44A95.54,95.54,0,0,1,40,152a85.9,85.9,0,0,1,7.73-36.29l137.8,55.12c3,18,10.56,33.48,21.89,45.16Z"></path></svg>
+						資料清除
+					</button>
+				</div>
+				<span>字型</span>
+			</div>
+			<div class="block px-1">
+				<div>
+					<div class="d-flex justify-content-between align-items-center">
+						<input id="scaleRateSlider" type="range" class="form-range" min="80" max="200" value="100" />
+						<label for="scaleRateSlider"><span id="scaleRateValue">100%</span></label>
+					</div>
+				</div>
+				<span>輸出縮放率</span>
+			</div>
+		</div>
+		<div class="active">
+			<div class="block px-1">
+				<div>
+					<div class="input-group mb-1">
+						<label class="input-group-text" for="listSelect">字表</label>
+						<select class="form-select" id="listSelect"></select>
+					</div>
+					<button type="button" class="btn btn-light" id="canvasListButton" data-bs-toggle="modal" data-bs-target="#listup_container">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z"></path></svg>
+					</button>
+					<button type="button" class="btn btn-light" id="findButton">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64Zm8,72h72a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm88,48H40a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16Zm109.66,13.66a8,8,0,0,1-11.32,0L206,177.36A40,40,0,1,1,217.36,166l20.3,20.3A8,8,0,0,1,237.66,197.66ZM184,168a24,24,0,1,0-24-24A24,24,0,0,0,184,168Z"></path></svg>
+					</button>
+				</div>
+				<span>字符</span>
+			</div>
+			<div class="block px-1">
+				<div class="d-flex flex-column h-100">
+					<div class="d-flex">
+						<div class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;"></div>
+						<div id="moveUpButton" class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"></path></svg>
+						</div>
+						<div class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;"></div>
+					</div>
+					<div class="d-flex">
+						<div id="moveLeftButton" class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path></svg>
+						</div>
+						<div class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;"></div>
+						<div id="moveRightButton" class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path></svg>
+						</div>
+					</div>
+					<div class="d-flex">
+						<div class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;"></div>
+						<div id="moveDownButton" class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72a8,8,0,0,1,11.32-11.32L120,196.69V40a8,8,0,0,1,16,0V196.69l58.34-58.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+						</div>
+						<div class="d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;"></div>
+					</div>
+				</div>
+				<span>位移</span>
+			</div>
+			<div class="block px-1">
+				<div class="d-flex gap-1">
+					<button type="button" class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2" id="clearButton">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path></svg>
+						清除<br>畫布
+					</button>
+					<button type="button" class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2" id="undoButton">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"></path></svg>
+						上一步
+					</button>
+				</div>
+				<span>畫布</span>
+			</div>
+		</div>
+		<div>
+			<div class="block px-1">
+				<div>
+					<div class="btn-group" role="group" id="brushRadioGroup"></div>
+					<!-- <button type="button" class="btn btn-light" id="brushSelector"></button> -->
+				</div>
+				<span>樣式</span>
+			</div>
+			<div class="block px-1">
+				<div class="d-flex gap-1">
+					<select class="form-select" id="lineWidthSelect">
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+						<option value="7">7</option>
+						<option value="8">8</option>
+						<option value="9">9</option>
+						<option value="10">10</option>
+						<option value="11">11</option>
+						<option value="12" selected>12</option>
+						<option value="13">13</option>
+						<option value="14">14</option>
+						<option value="15">15</option>
+						<option value="16">16</option>
+						<option value="17">17</option>
+						<option value="18">18</option>
+						<option value="19">19</option>
+						<option value="20">20</option>
+						<option value="21">21</option>
+						<option value="22">22</option>
+						<option value="23">23</option>
+						<option value="24">24</option>
+						<option value="25">25</option>
+						<option value="26">26</option>
+						<option value="27">27</option>
+						<option value="28">28</option>
+						<option value="29">29</option>
+						<option value="30">30</option>
+						<option value="31">31</option>
+						<option value="32">32</option>
+						<option value="33">33</option>
+						<option value="34">34</option>
+						<option value="35">35</option>
+						<option value="36">36</option>
+					</select>
+				</div>
+				<span>大小</span>
+			</div>
+			<div class="block px-1">
+				<div class="d-flex gap-1">
+					<div class="px-1" id="pressureSwitchContainer">
+						<div class="form-check form-switch">
+							<input class="form-check-input" type="checkbox" role="switch" id="pressureSwitch" checked>
+							<label class="form-check-label" for="pressureSwitch">筆壓模式</label>
+						</div>
+					</div>
+					<div class="px-1">
+						<div class="form-floating">
+							<select class="form-select" id="pressureEffectSelect">
+								<option value="none">原始值</option>
+								<option value="contrast">加大對比</option>
+								<option value="enhance">增強（省力）</option>
+								<option value="enhancex">再增強（更省力）</option>
+							</select>
+							<label for="pressureEffectSelect">筆壓敏感度</label>
+						</div>
+						<span class="note">僅對有筆壓的設備有效。<br>目前實驗中，未來修改可能無法維持舊版相容性。</span>
+					</div>
+					<div class="px-1">
+						<div class="form-check form-switch">
+							<input class="form-check-input" type="checkbox" role="switch" id="pressureDrawingEnabled" checked>
+							<label class="form-check-label" for="pressureDrawingEnabled">啟用舊筆壓模式（不建議）</label>
+						</div>
+						<span class="note">舊筆壓模式無法支援筆刷功能。</span>
+					</div>
+				</div>
+				<span>筆壓</span>
+			</div>
+		</div>
+		<div>
+			<div class="block px-1">
+				<div>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" role="switch" id="smallModeCheck">
+						<label class="form-check-label" for="smallModeCheck">我的字就是小</label>
+					</div>
+					<span class="note">適合寫字真的很小的人。</span>
+				</div>
+				<span>縮放</span>
+			</div>
+			<div class="block px-1">
+				<div>
+					<select class="form-select" id="gridTypeSelect">
+						<option value="3x3grid">九宮格</option>
+						<option value="3x3grid-new">新九宮格</option>
+						<option value="2x2grid">田字格</option>
+						<option value="stargrid">米字格</option>
+						<option value="boxgrid">回字格</option>
+						<option value="nogrid">無格線（僅字身框）</option>
+					</select>
+				</div>
+				<span>背景格線樣式</span>
+			</div>
+		</div>
+		<div>
+			<div class="block px-1">
+				<div>
+					<button type="button" class="btn btn-light d-flex flex-column justify-content-center align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#hint_container">
+						<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256"><path d="M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Zm-16.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z"></path></svg>
+						提示
+					</button>
+				</div>
+				<span>說明</span>
+			</div>
+		</div>
+	</div>
+	<div id="demo-container">
 		<span id="glyphName"></span>
 		<span id="charSeq"></span>
 		<span id="glyphNote"></span>
-		<span class="butt" id="prevButton">👈</span>
-		<span class="butt" id="nextButton">👉</span>
-    </div>
-	<div id="canvas-container">
-        <canvas id="gridCanvas" width="500" height="500"></canvas>
-        <canvas id="drawingCanvas" width="500" height="500"></canvas>
-    </div>
-
-	<div id="slider-container">
-		<div id="brushSelector"></div><div id="pressureButton" class="off"></div>
-		<span class="butt use" id="penButton">🖌️</span><span class="butt" id="eraserButton">🚿</span>
-		<input id="lineWidthSlider" type="range" min="2" max="36" value="12" />
-		<label for="lineWidthSlider"><span id="lineWidthValue">12</span></label>
+		<span class="btn" id="prevButton">
+			<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path></svg>
+		</span>
+		<span class="btn" id="nextButton">
+			<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path></svg>
+		</span>
 	</div>
-
-	<div id="button-container">
-		<span class="butt" id="clearButton">🚮</span>
-		<span class="butt" id="moveLeftButton">⬅️</span>
-		<span class="butt" id="moveRightButton">➡️</span>
-		<span class="butt" id="moveUpButton">⬆️</span>
-		<span class="butt" id="moveDownButton">⬇️</span>
-		<span class="butt" id="undoButton">↩️</span>
+	<div id="canvas-container">
+		<canvas id="gridCanvas" width="500" height="500"></canvas>
+		<canvas id="drawingCanvas" width="500" height="500"></canvas>
+	</div>
+	<div id="button-container" class="mt-4 mx-auto p-2 rounded-pill shadow-sm bg-white gap-2">
+		<button type="button" class="btn btn-light rounded-circle" id="clearButtonUnderCanvas">
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path></svg>
+		</button>
+		<button type="button" class="btn btn-light rounded-circle" id="undoButtonUnderCanvas">
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z"></path></svg>
+		</button>
+		<div class="split"></div>
+		<div class="btn-group" role="group">
+			<button type="button" class="btn btn-primary" id="penButton">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M227.32,73.37,182.63,28.69a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31l83.67-83.66,3.48,13.9-36.8,36.79a8,8,0,0,0,11.31,11.32l40-40a8,8,0,0,0,2.11-7.6l-6.9-27.61L227.32,96A16,16,0,0,0,227.32,73.37ZM48,179.31,76.69,208H48Zm48,25.38L51.31,160,136,75.31,180.69,120Zm96-96L147.32,64l24-24L216,84.69Z"></path></svg>
+			</button>
+			<button type="button" class="btn btn-light" id="eraserButton">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M225,80.4,183.6,39a24,24,0,0,0-33.94,0L31,157.66a24,24,0,0,0,0,33.94l30.06,30.06A8,8,0,0,0,66.74,224H216a8,8,0,0,0,0-16h-84.7L225,114.34A24,24,0,0,0,225,80.4ZM108.68,208H70.05L42.33,180.28a8,8,0,0,1,0-11.31L96,115.31,148.69,168Zm105-105L160,156.69,107.31,104,161,50.34a8,8,0,0,1,11.32,0l41.38,41.38a8,8,0,0,1,0,11.31Z"></path></svg>
+			</button>
+		</div>
+		<div class="split"></div>
+		<div class="d-flex align-items-center">
+			<input id="lineWidthSlider" class="form-range" type="range" min="2" max="36" value="12" />
+			<button type="button" id="brushDisplay" class="btn btn-light" style="width: 36px; box-sizing: content-box;"><img id="brushDisplayImg" src=""></button>
+		</div>
     </div>
-
 	<div id="navi-container">
-		<span class="butt" id="hintButton">💡</span>
-		<span class="butt" id="settingButton">⚙️</span>
 		<span id="spanDoneCount">-</span>
-		<span class="butt" id="downloadButton">💾</span>
-    </div>
+		<span>個字</span>
+	</div>
 	<div id="progress-container">
 		<progress id="progress-bar" value="0" max="100"></progress>
 		<span id="progress-text">0%</span>
 	</div>
 
-	<div id="listup-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeListupButton" class="close">×</span>
-			<h2>字符列表</h2>
-			<div id="listup-body"></div>
-		</div>
-	</div>
-
-	<div id="hint-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeHintButton" class="close">×</span>
-			<h2>提示 Ver <span id="version"></span></h2>
-			<ul id="hintContent">
-				<li>本工具由「<a href="https://zi-hi.com" target="_blank">字嗨！</a>」提供。</li>
-				<li>書寫的字表來自「<a href="https://justfont.com/jf7000" target="_blank">jf7000當務字集</a>」。</li>
-				<li>由於所有資料儲存在您瀏覽器本地端，若擔心被瀏覽器清除，建議定期用匯出功能備份資料。</li>
-				<li>建議每個字寫好後，就立刻調整位置（漢字原則上置中），這樣可避免事後調整困難。</li>
-				<li>半形文字一律輸出成比例寬，故水平方向位置會被忽略。背景的紅線是基線的參考位置。</li>
-				<li>全形的英數字會使用半形英數字自動產生。</li>
-				<li>當所需的字符齊全時，系統會自動處理直排、組合文字的設定。</li>
-				<li>請注意因為技術的限制，目前本系統所產生的OTF檔案，雖可勉強安裝運作，但並非正確的CID格式，可能在Adobe軟體無法正確識別為CJK字型。</li>
-				<li>本服務所生成的字型檔，若使用上造成任何影響，本服務與作者不負任何責任。</li>
-				<li>本系統並未蒐集任何使用者筆跡或其他用戶資訊。但若要公開您的字型檔時，請自行評估筆跡公開的風險。</li>
-				<li>本工具不定期更新，雖然力求盡可能支援先前的版本，但要維護多種舊機制相各種環境有所困難，難以盡善盡美。由於所有版本程式碼都是開源的，可自行從GitHub上使用。若有技術支援需求，可與作者聯絡（可能須付費）。</li>
-				<li>本專案GitHub頁面在<a href="https://github.com/ButTaiwan/writemyfont" target="_blank">這裡</a>，在此可查閱更多資訊。<p class="dummy"></p></li>
-			</ul>
-		</div>
-	</div>
-
-	<div id="settings-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeSettingsButton" class="close">×</span>
-			<h2 id="settings-title">設定</h2>
-			<span class="note" id="span-welcome">在開始書寫之前，先來設定一些基本資訊吧！這些設定值之後都能再更改。<br>提醒您，若您是在App內的瀏覽器開啟本頁，建議用系統瀏覽器開啟，避免資料遺失！</span>
-
-			<h3>字型英文名稱</h3>
-			<input id="fontNameEng" type="text" placeholder="請輸入英文名稱" maxlength="24" />
-
-			<h3>字型中文名稱</h3>
-			<input id="fontNameCJK" type="text" placeholder="請輸入中文名稱" maxlength="10" />
-			
-			<h3>縮放率</h3>
-			<input id="scaleRateSlider" type="range" min="80" max="200" value="100" />
-			<span id="scaleRateValue">100%</span>
-			<span class="note">手寫時為了避免超框，容易不經意把字寫得偏小。這裡可以調整文字框的尺寸。</span>
-
-			<h3>我的字就是小</h3>
-			<input id="smallModeCheck" type="checkbox" />
-			<span class="note">適合寫字真的很小的人。</span>
-
-			<h3>背景格線樣式</h3>
-			<select id="gridTypeSelect">
-				<option value="3x3grid">九宮格</option>
-				<option value="3x3grid-new">新九宮格</option>
-				<option value="2x2grid">田字格</option>
-				<option value="stargrid">米字格</option>
-				<option value="boxgrid">回字格</option>
-				<option value="nogrid">無格線（僅字身框）</option>
-			</select>
-
-			<h3>中文字不等寬</h3>
-			<input id="noFixedWidthFlag" type="checkbox" />
-			<span class="note">設定為不等寬會更像手寫字型，但可能不適合用於直排。</span>
-
-			<h3>筆壓敏感度（實驗中）</h3>
-			<select id="pressureEffectSelect">
-				<option value="none">原始值</option>
-				<option value="contrast">加大對比</option>
-				<option value="enhance">增強（省力）</option>
-				<option value="enhancex">再增強（更省力）</option>
-			</select>
-			<span class="note">本選項僅對有筆壓的設備有效。目前尚在調整中，未來修改可能無法維持舊版相容性。</span>
-
-			<h3>啟用舊筆壓模式（不建議）</h3>
-			<input id="pressureDrawingEnabled" type="checkbox" checked />
-			<span class="note">舊筆壓模式無法支援筆刷功能。</span>
-
-			<div id="div-backup">
-			<br />
-			<br />
-			<br />
-			<hr />
-			<h3>完全清除字型資料</h3>
-			<button id="clearAllButton">清除字型資料（無法復原！）</button>
-			<br />
-			<h3>匯出系統事件（開發用）</h3>
-			<button id="exportEventsButton">匯出系統事件</button>
-			<br />
+	<div class="modal fade" tabindex="-1" id="listup_container">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">字符列表</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div id="listup-body"></div>
+				</div>
 			</div>
-			<p class="dummy"></p>
 		</div>
 	</div>
 
-	<div id="download-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeDownloadButton" class="close">×</span>
-			<h2 id="settings-title">下載</h2>
+	<div class="modal fade" tabindex="-1" id="hint_container">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">提示 Ver <span id="version"></span></h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<ul id="hintContent">
+						<li>本工具由「<a href="https://zi-hi.com" target="_blank">字嗨！</a>」提供。</li>
+						<li>書寫的字表來自「<a href="https://justfont.com/jf7000" target="_blank">jf7000當務字集</a>」。</li>
+						<li>由於所有資料儲存在您瀏覽器本地端，若擔心被瀏覽器清除，建議定期用匯出功能備份資料。</li>
+						<li>建議每個字寫好後，就立刻調整位置（漢字原則上置中），這樣可避免事後調整困難。</li>
+						<li>半形文字一律輸出成比例寬，故水平方向位置會被忽略。背景的紅線是基線的參考位置。</li>
+						<li>全形的英數字會使用半形英數字自動產生。</li>
+						<li>當所需的字符齊全時，系統會自動處理直排、組合文字的設定。</li>
+						<li>請注意因為技術的限制，目前本系統所產生的OTF檔案，雖可勉強安裝運作，但並非正確的CID格式，可能在Adobe軟體無法正確識別為CJK字型。</li>
+						<li>本服務所生成的字型檔，若使用上造成任何影響，本服務與作者不負任何責任。</li>
+						<li>本系統並未蒐集任何使用者筆跡或其他用戶資訊。但若要公開您的字型檔時，請自行評估筆跡公開的風險。</li>
+						<li>本工具不定期更新，雖然力求盡可能支援先前的版本，但要維護多種舊機制相各種環境有所困難，難以盡善盡美。由於所有版本程式碼都是開源的，可自行從GitHub上使用。若有技術支援需求，可與作者聯絡（可能須付費）。
+						</li>
+						<li>本專案GitHub頁面在<a href="https://github.com/ButTaiwan/writemyfont" target="_blank">這裡</a>，在此可查閱更多資訊。
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
 
-			<h3>下載字型</h3>
-			<input id="saveAsTester" type="checkbox" />
-			<label for="saveAsTester">測試輸出</label>
-			<span class="note">勾選測試輸出，字型名稱會加上流水號。避免系統快取造成在電腦上無法正常安裝使用的問題。</span>
-			<button id="downloadFontButton">下載字型OTF檔案</button><br>
-			<h3>斗內作者</h3>
-			字型檔的權利均屬於您個人，不過如果您喜歡這個工具，請<a href="https://p.ecpay.com.tw/930AED7" target="_blank">考慮斗內支持作者的開發工作</a>。您的支持將有助於未來的更新和改進！
-			<br />
-			<br />
-			<hr />
-			<h3>匯入先前備份的資料</h3>
-			<input type="file" id="importDataFile" accept=".txt" />
-			<br />
-			<h3>匯出編輯中資料</h3>
-			<button id="exportDataButton">備份工作中的字型資料</button>
-			<br />
-			<p class="dummy"></p>
+	<div class="modal fade" tabindex="-1" id="settings_container">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="settings-title">設定</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="alert alert-warning" id="span-welcome" role="alert">在開始書寫之前，先來設定一些基本資訊吧！這些設定值之後都能再更改。<br>提醒您，若您是在App內的瀏覽器開啟本頁，建議用系統瀏覽器開啟，避免資料遺失！</div>
+					<div class="input-group flex-nowrap mb-3">
+						<span class="input-group-text">字型英文名稱</span>
+						<input type="text" class="form-control" id="fontNameEng" placeholder="請輸入英文名稱" maxlength="24">
+					</div>
+					<div class="input-group flex-nowrap mb-3">
+						<span class="input-group-text">字型中文名稱</span>
+						<input type="text" class="form-control" id="fontNameCJK" placeholder="請輸入中文名稱" maxlength="10">
+					</div>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" role="switch" id="noFixedWidthFlag">
+						<label class="form-check-label" for="noFixedWidthFlag">中文字不等寬</label>
+					</div>
+					<span class="note mb-3">設定為不等寬會更像手寫字型，但可能不適合用於直排。</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" tabindex="-1" id="download_container">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">匯出字型</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<h6>斗內作者</h6>
+					<p>
+						字型檔的權利均屬於您個人，不過如果您喜歡這個工具，請<a href="https://p.ecpay.com.tw/930AED7"
+						target="_blank">考慮斗內支持作者的開發工作</a>。您的支持將有助於未來的更新和改進！
+					</p>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" id="saveAsTester">
+						<label class="form-check-label" for="saveAsTester">測試輸出</label>
+					</div>
+					<div class="alert alert-light" role="alert">勾選測試輸出，字型名稱會加上流水號。避免系統快取造成在電腦上無法正常安裝使用的問題。</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+					<button type="button" class="btn btn-primary" id="downloadFontButton">匯出成OTF檔案</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -182,9 +416,18 @@
 		</div>
 	</div> -->
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+		crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="https://opentype.js.org/dist/opentype.js"></script>
-    <script src="potrace.js"></script>
+	<script src="js/db.js"></script>
+	<script src="js/settings.js"></script>
+	<script src="js/font.js"></script>
+	<script src="js/potrace.js"></script>
+	<script src="js/brushes.js"></script>
+	<script src="js/controller.js"></script>
+	<script src="js/Canvas.js"></script>
 	<script>
 		const fdrawer = {
 			dbName: 'FontDrawerDB',
@@ -197,7 +440,7 @@
 			noDataToExport: '沒有可匯出的資料。',
 			importConfirm: '確定要匯入資料嗎？這將清除目前編輯中的所有資料。',
 			importDone: '匯入完成。',
-			clearConfirm: '確定要清除所有寫過的字嗎？',
+			clearConfirm: '確定要清除所有寫過的字嗎？清除後無法復原！！！',
 			clearDone: '已清除。',
 			welcomeTitle: '歡迎使用手寫字型產生器！',
 			settingsTitle: '字型設定',
@@ -205,9 +448,10 @@
 			customList: '使用者字表'
 		};
 	</script>
+	<script src="js/pressure-drawing.js"></script>
+	<script src="js/cglyphlist.js"></script>
+	<script src="js/menu.js"></script>
 
-    <script src="pressure-drawing.js"></script>
-    <script src="cglyphlist.js"></script>
-    <script src="fontdrawer.js"></script>
+	<script src="js/index.js"></script>
 </body>
 </html>
