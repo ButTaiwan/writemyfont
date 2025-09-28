@@ -1,177 +1,195 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>手寫字型產生器 by 字嗨</title>
-	<link rel="stylesheet" href="style.css">
-</head>
-<body lang="zh-TW">
-	<div id="list-container">
-		<label for="listSelect">字表：</label>
-		<select id="listSelect"></select>
-		<span class="butt" id="canvasListButton">👓</span>
-		<span class="butt" id="findButton">🔍</span>
-    </div>
-
-    <div id="demo-container">
-		<span id="glyphName"></span>
-		<span id="charSeq"></span>
-		<span id="glyphNote"></span>
-		<span class="butt" id="prevButton">👈</span>
-		<span class="butt" id="nextButton">👉</span>
-    </div>
-	<div id="canvas-container">
-        <canvas id="gridCanvas" width="500" height="500"></canvas>
-        <canvas id="drawingCanvas" width="500" height="500"></canvas>
-    </div>
-
-	<div id="slider-container">
-		<div id="brushSelector"></div><div id="pressureButton" class="off"></div>
-		<span class="butt use" id="penButton">🖌️</span><span class="butt" id="eraserButton">🚿</span>
-		<input id="lineWidthSlider" type="range" min="2" max="36" value="12" />
-		<label for="lineWidthSlider"><span id="lineWidthValue">12</span></label>
-	</div>
-
-	<div id="button-container">
-		<span class="butt" id="clearButton">🚮</span>
-		<span class="butt" id="moveLeftButton">⬅️</span>
-		<span class="butt" id="moveRightButton">➡️</span>
-		<span class="butt" id="moveUpButton">⬆️</span>
-		<span class="butt" id="moveDownButton">⬇️</span>
-		<span class="butt" id="undoButton">↩️</span>
-    </div>
-
-	<div id="navi-container">
-		<span class="butt" id="hintButton">💡</span>
-		<span class="butt" id="settingButton">⚙️</span>
-		<span id="spanDoneCount">-</span>
-		<span class="butt" id="downloadButton">💾</span>
-    </div>
-	<div id="progress-container">
-		<progress id="progress-bar" value="0" max="100"></progress>
-		<span id="progress-text">0%</span>
-	</div>
-
-	<div id="listup-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeListupButton" class="close">×</span>
-			<h2>字符列表</h2>
-			<div id="listup-body"></div>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>手寫字型產生器 by 字嗨</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body lang="zh-TW">
+		<div id="list-container">
+			<label for="listSelect">字表：</label>
+			<select id="listSelect"></select>
+			<span class="butt" id="canvasListButton">👓</span>
+			<span class="butt" id="findButton">🔍</span>
 		</div>
-	</div>
 
-	<div id="hint-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeHintButton" class="close">×</span>
-			<h2>提示 Ver <span id="version"></span></h2>
-			<ul id="hintContent">
-				<li>本工具由「<a href="https://zi-hi.com" target="_blank">字嗨！</a>」提供。</li>
-				<li>書寫的字表來自「<a href="https://justfont.com/jf7000" target="_blank">jf7000當務字集</a>」。</li>
-				<li>由於所有資料儲存在您瀏覽器本地端，若擔心被瀏覽器清除，建議定期用匯出功能備份資料。</li>
-				<li>建議每個字寫好後，就立刻調整位置（漢字原則上置中），這樣可避免事後調整困難。</li>
-				<li>半形文字一律輸出成比例寬，故水平方向位置會被忽略。背景的紅線是基線的參考位置。</li>
-				<li>全形的英數字會使用半形英數字自動產生。</li>
-				<li>當所需的字符齊全時，系統會自動處理直排、組合文字的設定。</li>
-				<li>請注意因為技術的限制，目前本系統所產生的OTF檔案，雖可勉強安裝運作，但並非正確的CID格式，可能在Adobe軟體無法正確識別為CJK字型。</li>
-				<li>本服務所生成的字型檔，若使用上造成任何影響，本服務與作者不負任何責任。</li>
-				<li>本系統並未蒐集任何使用者筆跡或其他用戶資訊。但若要公開您的字型檔時，請自行評估筆跡公開的風險。</li>
-				<li>本工具不定期更新，雖然力求盡可能支援先前的版本，但要維護多種舊機制相各種環境有所困難，難以盡善盡美。由於所有版本程式碼都是開源的，可自行從GitHub上使用。若有技術支援需求，可與作者聯絡（可能須付費）。</li>
-				<li>本專案GitHub頁面在<a href="https://github.com/ButTaiwan/writemyfont" target="_blank">這裡</a>，在此可查閱更多資訊。<p class="dummy"></p></li>
-			</ul>
+		<div id="demo-container">
+			<span id="glyphName"></span>
+			<span id="charSeq"></span>
+			<span id="glyphNote"></span>
+			<span class="butt" id="prevButton">👈</span>
+			<span class="butt" id="nextButton">👉</span>
 		</div>
-	</div>
+		<div id="canvas-container">
+			<canvas id="gridCanvas" width="500" height="500"></canvas>
+			<canvas id="drawingCanvas" width="500" height="500"></canvas>
+		</div>
 
-	<div id="settings-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeSettingsButton" class="close">×</span>
-			<h2 id="settings-title">設定</h2>
-			<span class="note" id="span-welcome">在開始書寫之前，先來設定一些基本資訊吧！這些設定值之後都能再更改。<br>提醒您，若您是在App內的瀏覽器開啟本頁，建議用系統瀏覽器開啟，避免資料遺失！</span>
+		<div id="slider-container">
+			<div id="brushSelector"></div>
+			<div id="pressureButton" class="off"></div>
+			<span class="butt use" id="penButton">🖌️</span><span class="butt" id="eraserButton">🚿</span>
+			<input id="lineWidthSlider" type="range" min="2" max="36" value="12" />
+			<label for="lineWidthSlider"><span id="lineWidthValue">12</span></label>
+		</div>
 
-			<h3>字型英文名稱</h3>
-			<input id="fontNameEng" type="text" placeholder="請輸入英文名稱" maxlength="24" />
+		<div id="button-container">
+			<span class="butt" id="clearButton">🚮</span>
+			<span class="butt" id="moveLeftButton">⬅️</span>
+			<span class="butt" id="moveRightButton">➡️</span>
+			<span class="butt" id="moveUpButton">⬆️</span>
+			<span class="butt" id="moveDownButton">⬇️</span>
+			<span class="butt" id="undoButton">↩️</span>
+		</div>
 
-			<h3>字型中文名稱</h3>
-			<input id="fontNameCJK" type="text" placeholder="請輸入中文名稱" maxlength="10" />
-			
-			<h3>縮放率</h3>
-			<input id="scaleRateSlider" type="range" min="80" max="200" value="100" />
-			<span id="scaleRateValue">100%</span>
-			<span class="note">手寫時為了避免超框，容易不經意把字寫得偏小。這裡可以調整文字框的尺寸。</span>
+		<div id="navi-container">
+			<span class="butt" id="hintButton">💡</span>
+			<span class="butt" id="settingButton">⚙️</span>
+			<span id="spanDoneCount">-</span>
+			<span class="butt" id="downloadButton">💾</span>
+		</div>
+		<div id="progress-container">
+			<progress id="progress-bar" value="0" max="100"></progress>
+			<span id="progress-text">0%</span>
+		</div>
 
-			<h3>我的字就是小</h3>
-			<input id="smallModeCheck" type="checkbox" />
-			<span class="note">適合寫字真的很小的人。</span>
-
-			<h3>背景格線樣式</h3>
-			<select id="gridTypeSelect">
-				<option value="3x3grid">九宮格</option>
-				<option value="3x3grid-new">新九宮格</option>
-				<option value="2x2grid">田字格</option>
-				<option value="stargrid">米字格</option>
-				<option value="boxgrid">回字格</option>
-				<option value="nogrid">無格線（僅字身框）</option>
-			</select>
-
-			<h3>中文字不等寬</h3>
-			<input id="noFixedWidthFlag" type="checkbox" />
-			<span class="note">設定為不等寬會更像手寫字型，但可能不適合用於直排。</span>
-
-			<h3>筆壓敏感度（實驗中）</h3>
-			<select id="pressureEffectSelect">
-				<option value="none">原始值</option>
-				<option value="contrast">加大對比</option>
-				<option value="enhance">增強（省力）</option>
-				<option value="enhancex">再增強（更省力）</option>
-			</select>
-			<span class="note">本選項僅對有筆壓的設備有效。目前尚在調整中，未來修改可能無法維持舊版相容性。</span>
-
-			<h3>啟用舊筆壓模式（不建議）</h3>
-			<input id="pressureDrawingEnabled" type="checkbox" checked />
-			<span class="note">舊筆壓模式無法支援筆刷功能。</span>
-
-			<div id="div-backup">
-			<br />
-			<br />
-			<br />
-			<hr />
-			<h3>完全清除字型資料</h3>
-			<button id="clearAllButton">清除字型資料（無法復原！）</button>
-			<br />
-			<h3>匯出系統事件（開發用）</h3>
-			<button id="exportEventsButton">匯出系統事件</button>
-			<br />
+		<div id="listup-container" class="dialog">
+			<div class="dialog-body">
+				<span id="closeListupButton" class="close">×</span>
+				<h2>字符列表</h2>
+				<div id="listup-body"></div>
 			</div>
-			<p class="dummy"></p>
 		</div>
-	</div>
 
-	<div id="download-container" class="dialog">
-		<div class="dialog-body">
-			<span id="closeDownloadButton" class="close">×</span>
-			<h2 id="settings-title">下載</h2>
-
-			<h3>下載字型</h3>
-			<input id="saveAsTester" type="checkbox" />
-			<label for="saveAsTester">測試輸出</label>
-			<span class="note">勾選測試輸出，字型名稱會加上流水號。避免系統快取造成在電腦上無法正常安裝使用的問題。</span>
-			<button id="downloadFontButton">下載字型OTF檔案</button><br>
-			<h3>斗內作者</h3>
-			字型檔的權利均屬於您個人，不過如果您喜歡這個工具，請<a href="https://p.ecpay.com.tw/930AED7" target="_blank">考慮斗內支持作者的開發工作</a>。您的支持將有助於未來的更新和改進！
-			<br />
-			<br />
-			<hr />
-			<h3>匯入先前備份的資料</h3>
-			<input type="file" id="importDataFile" accept=".txt" />
-			<br />
-			<h3>匯出編輯中資料</h3>
-			<button id="exportDataButton">備份工作中的字型資料</button>
-			<br />
-			<p class="dummy"></p>
+		<div id="hint-container" class="dialog">
+			<div class="dialog-body">
+				<span id="closeHintButton" class="close">×</span>
+				<h2>提示 Ver <span id="version"></span></h2>
+				<ul id="hintContent">
+					<li>本工具由「<a href="https://zi-hi.com" target="_blank">字嗨！</a>」提供。</li>
+					<li>書寫的字表來自「<a href="https://justfont.com/jf7000" target="_blank">jf7000當務字集</a>」。</li>
+					<li>由於所有資料儲存在您瀏覽器本地端，若擔心被瀏覽器清除，建議定期用匯出功能備份資料。</li>
+					<li>建議每個字寫好後，就立刻調整位置（漢字原則上置中），這樣可避免事後調整困難。</li>
+					<li>半形文字一律輸出成比例寬，故水平方向位置會被忽略。背景的紅線是基線的參考位置。</li>
+					<li>全形的英數字會使用半形英數字自動產生。</li>
+					<li>當所需的字符齊全時，系統會自動處理直排、組合文字的設定。</li>
+					<li>請注意因為技術的限制，目前本系統所產生的OTF檔案，雖可勉強安裝運作，但並非正確的CID格式，可能在Adobe軟體無法正確識別為CJK字型。</li>
+					<li>本服務所生成的字型檔，若使用上造成任何影響，本服務與作者不負任何責任。</li>
+					<li>本系統並未蒐集任何使用者筆跡或其他用戶資訊。但若要公開您的字型檔時，請自行評估筆跡公開的風險。</li>
+					<li>
+						本工具不定期更新，雖然力求盡可能支援先前的版本，但要維護多種舊機制相各種環境有所困難，難以盡善盡美。由於所有版本程式碼都是開源的，可自行從GitHub上使用。若有技術支援需求，可與作者聯絡（可能須付費）。
+					</li>
+					<li>
+						本專案GitHub頁面在<a href="https://github.com/ButTaiwan/writemyfont" target="_blank">這裡</a>，在此可查閱更多資訊。
+						<p class="dummy"></p>
+					</li>
+				</ul>
+			</div>
 		</div>
-	</div>
 
-	<!-- <div id="ads-container" class="dialog">
+		<div id="settings-container" class="dialog">
+			<div class="dialog-body">
+				<span id="closeSettingsButton" class="close">×</span>
+				<h2 id="settings-title">設定</h2>
+				<span class="note" id="span-welcome"
+					>在開始書寫之前，先來設定一些基本資訊吧！這些設定值之後都能再更改。<br />提醒您，若您是在App內的瀏覽器開啟本頁，建議用系統瀏覽器開啟，避免資料遺失！</span
+				>
+
+				<h3>字型英文名稱</h3>
+				<input id="fontNameEng" type="text" placeholder="請輸入英文名稱" maxlength="24" />
+
+				<h3>字型中文名稱</h3>
+				<input id="fontNameCJK" type="text" placeholder="請輸入中文名稱" maxlength="10" />
+
+				<h3>縮放率</h3>
+				<input id="scaleRateSlider" type="range" min="80" max="200" value="100" />
+				<span id="scaleRateValue">100%</span>
+				<span class="note">手寫時為了避免超框，容易不經意把字寫得偏小。這裡可以調整文字框的尺寸。</span>
+
+				<h3>我的字就是小</h3>
+				<input id="smallModeCheck" type="checkbox" />
+				<span class="note">適合寫字真的很小的人。</span>
+
+				<h3>背景格線樣式</h3>
+				<select id="gridTypeSelect">
+					<option value="3x3grid">九宮格</option>
+					<option value="3x3grid-new">新九宮格</option>
+					<option value="2x2grid">田字格</option>
+					<option value="stargrid">米字格</option>
+					<option value="boxgrid">回字格</option>
+					<option value="nogrid">無格線（僅字身框）</option>
+				</select>
+
+				<h3>中文字不等寬</h3>
+				<input id="noFixedWidthFlag" type="checkbox" />
+				<span class="note">設定為不等寬會更像手寫字型，但可能不適合用於直排。</span>
+
+				<h3>筆壓敏感度（實驗中）</h3>
+				<select id="pressureEffectSelect">
+					<option value="none">原始值</option>
+					<option value="contrast">加大對比</option>
+					<option value="enhance">增強（省力）</option>
+					<option value="enhancex">再增強（更省力）</option>
+				</select>
+				<span class="note">本選項僅對有筆壓的設備有效。目前尚在調整中，未來修改可能無法維持舊版相容性。</span>
+
+				<h3>啟用舊筆壓模式（不建議）</h3>
+				<input id="pressureDrawingEnabled" type="checkbox" checked />
+				<span class="note">舊筆壓模式無法支援筆刷功能。</span>
+
+				<div id="div-backup">
+					<br />
+					<br />
+					<br />
+					<hr />
+					<h3>完全清除字型資料</h3>
+					<button id="clearAllButton">清除字型資料（無法復原！）</button>
+					<br />
+					<h3>匯出系統事件（開發用）</h3>
+					<button id="exportEventsButton">匯出系統事件</button>
+					<br />
+				</div>
+				<p class="dummy"></p>
+			</div>
+		</div>
+
+		<div id="download-container" class="dialog">
+			<div class="dialog-body">
+				<span id="closeDownloadButton" class="close">×</span>
+				<h2 id="settings-title">下載</h2>
+
+				<h3>下載字型</h3>
+				<input id="saveAsTester" type="checkbox" />
+				<label for="saveAsTester">測試輸出</label>
+				<span class="note">勾選測試輸出，字型名稱會加上流水號。避免系統快取造成在電腦上無法正常安裝使用的問題。</span>
+				<button id="downloadFontButton">下載字型OTF檔案</button><br />
+				<button id="justwriteNOWButton">傳送到手寫誌</button>
+				<h3>斗內作者</h3>
+				字型檔的權利均屬於您個人，不過如果您喜歡這個工具，請<a href="https://p.ecpay.com.tw/930AED7" target="_blank">考慮斗內支持作者的開發工作</a>。您的支持將有助於未來的更新和改進！
+				<br />
+				<br />
+				<hr />
+				<h3>匯入先前備份的資料</h3>
+				<input type="file" id="importDataFile" accept=".txt" />
+				<br />
+				<h3>匯出編輯中資料</h3>
+				<button id="exportDataButton">備份工作中的字型資料</button>
+				<br />
+				<p class="dummy"></p>
+			</div>
+		</div>
+
+		<div id="justwritenow-container" class="dialog">
+			<div class="dialog-body">
+				<span id="closeJustWriteNOWButton" class="close">×</span>
+				<h2 id="justwritenow-title">正在傳送至手寫誌</h2>
+				<p id="justwritenow-status">處理中...</p>
+				<button id="justwriteNOWConfirmButton" disabled>傳送到手寫誌</button>
+			</div>
+		</div>
+
+		<!-- <div id="ads-container" class="dialog">
 		<div class="dialog-body">
 			<span id="closeAdsButton" class="close">×</span>
 			<h2 id="settings-title">活動訊息</h2>
@@ -182,32 +200,35 @@
 		</div>
 	</div> -->
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<script src="https://opentype.js.org/dist/opentype.js"></script>
-    <script src="potrace.js"></script>
-	<script>
-		const fdrawer = {
-			dbName: 'FontDrawerDB',
-			fontNameCJK: '我的手寫字型',
-			fontLang: 'zh-TW',
-			codePage: 0x00100001,
-			findMsg: '請輸入要找的文字：',
-			notFound: '查無此字符！',
-			confirmAdd: '請問要新增到使用者字表嗎？',
-			noDataToExport: '沒有可匯出的資料。',
-			importConfirm: '確定要匯入資料嗎？這將清除目前編輯中的所有資料。',
-			importDone: '匯入完成。',
-			clearConfirm: '確定要清除所有寫過的字嗎？',
-			clearDone: '已清除。',
-			welcomeTitle: '歡迎使用手寫字型產生器！',
-			settingsTitle: '字型設定',
-			inAppNotice: '請使用裝置瀏覽器開啟以獲得最佳使用體驗。',
-			customList: '使用者字表'
-		};
-	</script>
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+		<script src="https://opentype.js.org/dist/opentype.js"></script>
+		<script src="potrace.js"></script>
+		<script>
+			const fdrawer = {
+				dbName: 'FontDrawerDB',
+				fontNameCJK: '我的手寫字型',
+				fontLang: 'zh-TW',
+				codePage: 0x00100001,
+				findMsg: '請輸入要找的文字：',
+				notFound: '查無此字符！',
+				confirmAdd: '請問要新增到使用者字表嗎？',
+				noDataToExport: '沒有可匯出的資料。',
+				importConfirm: '確定要匯入資料嗎？這將清除目前編輯中的所有資料。',
+				importDone: '匯入完成。',
+				clearConfirm: '確定要清除所有寫過的字嗎？',
+				clearDone: '已清除。',
+				welcomeTitle: '歡迎使用手寫字型產生器！',
+				settingsTitle: '字型設定',
+				inAppNotice: '請使用裝置瀏覽器開啟以獲得最佳使用體驗。',
+				customList: '使用者字表',
+				exportPreparingMsg: '正在準備資料，請稍候...',
+				exportFailedMsg: '傳送至手寫誌失敗，請允許彈出視窗後重新點擊匯出。',
+				exportReadyMsg: '準備好了！請點擊下方按鈕前往手寫誌。',
+			};
+		</script>
 
-    <script src="pressure-drawing.js"></script>
-    <script src="cglyphlist.js"></script>
-    <script src="fontdrawer.js"></script>
-</body>
+		<script src="pressure-drawing.js"></script>
+		<script src="cglyphlist.js"></script>
+		<script src="fontdrawer.js"></script>
+	</body>
 </html>

@@ -1,142 +1,145 @@
-<html lang="zh-Hant"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第一屆基礎字造句大賽</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+<html lang="zh-Hant">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>第一屆基礎字造句大賽</title>
+		<style>
+			body {
+				background-color: #121212;
+				color: #ffffff;
+				font-family: Arial, sans-serif;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				height: 100vh;
+			}
 
-		h1 { text-align: center;}
+			h1 {
+				text-align: center;
+			}
 
-        input {
-            width: 90%;
-            max-width: 400px;
-            padding: 10px;
-            font-size: 1em;
-            margin-bottom: 20px;
-            border: none;
-            border-radius: 5px;
-			background: #444;
-			color: #eee;
-			text-align: center;
-        }
+			input {
+				width: 90%;
+				max-width: 400px;
+				padding: 10px;
+				font-size: 1em;
+				margin-bottom: 20px;
+				border: none;
+				border-radius: 5px;
+				background: #444;
+				color: #eee;
+				text-align: center;
+			}
 
-        .output {
-            width: 90%;
-            max-width: 400px;
-            word-wrap: break-word;
-            font-size: 1.5em;
-			min-height: 3.5em; /* 固定高度，避免跳動 */
-			text-align: center;
-        }
+			.output {
+				width: 90%;
+				max-width: 400px;
+				word-wrap: break-word;
+				font-size: 1.5em;
+				min-height: 3.5em; /* 固定高度，避免跳動 */
+				text-align: center;
+			}
 
-        #reference {
-            background-color: #1e1e1e;
-            border: 1px solid #333;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
-			font-size: 1em;
-            color: #888; /* 預設灰色字 */
-        }
+			#reference {
+				background-color: #1e1e1e;
+				border: 1px solid #333;
+				padding: 10px;
+				border-radius: 5px;
+				margin-top: 20px;
+				font-size: 1em;
+				color: #888; /* 預設灰色字 */
+			}
 
-        span.in-range {
-            color: #4caf50; /* 藍色系 */
-        }
+			span.in-range {
+				color: #4caf50; /* 藍色系 */
+			}
 
-        .out-of-range {
-            color: #f44336; /* 紅色系 */
-        }
-    </style>
-    <script src="cglyphlist.js"></script>
-</head>
-<body>
-    <h1>手寫字型產生器<br>第一屆基礎字造句大賽</h1>
-    <input type="text" id="glyphInput" placeholder="輸入文字...">
-    <div class="output" id="output"></div>
-	<button id="postButton">在Threads發表我的句子</button>
-    <div class="output" id="reference"></div>
+			.out-of-range {
+				color: #f44336; /* 紅色系 */
+			}
+		</style>
+		<script src="cglyphlist.js"></script>
+	</head>
+	<body>
+		<h1>手寫字型產生器<br />第一屆基礎字造句大賽</h1>
+		<input type="text" id="glyphInput" placeholder="輸入文字..." />
+		<div class="output" id="output"></div>
+		<button id="postButton">在Threads發表我的句子</button>
+		<div class="output" id="reference"></div>
 
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-		const charList = [];
-		for (const key in glyphList['基礎字']) charList.push(glyphMap[glyphList['基礎字'][key]].c);
-		console.log(glyphList['基礎字'].length);
-		console.log(charList.length);
-		console.log(charList);
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+		<script>
+			const charList = [];
+			for (const key in glyphList['基礎字']) charList.push(glyphMap[glyphList['基礎字'][key]].c);
+			console.log(glyphList['基礎字'].length);
+			console.log(charList.length);
+			console.log(charList);
 
-        function updateReferenceColors(inputText) {
-            const referenceDiv = document.getElementById('reference');
-            referenceDiv.innerHTML = '';
-            for (const char of charList) {
-                const span = document.createElement('span');
-                span.textContent = char;
-                if (inputText.includes(char)) {
-                    span.classList.add('in-range');
-                } else {
-                    span.style.color = '#888'; // 預設灰色系
-                }
-                referenceDiv.appendChild(span);
-            }
-        }
+			function updateReferenceColors(inputText) {
+				const referenceDiv = document.getElementById('reference');
+				referenceDiv.innerHTML = '';
+				for (const char of charList) {
+					const span = document.createElement('span');
+					span.textContent = char;
+					if (inputText.includes(char)) {
+						span.classList.add('in-range');
+					} else {
+						span.style.color = '#888'; // 預設灰色系
+					}
+					referenceDiv.appendChild(span);
+				}
+			}
 
-        updateReferenceColors('');
+			updateReferenceColors('');
 
-        function validateInput(inputText) {
-            const hasOutOfRange = [...inputText].some(char => !charList.includes(char));
-            const isTooShort = inputText.length < 3;
-            const postButton = document.getElementById('postButton');
+			function validateInput(inputText) {
+				const hasOutOfRange = [...inputText].some((char) => !charList.includes(char));
+				const isTooShort = inputText.length < 3;
+				const postButton = document.getElementById('postButton');
 
-            if (hasOutOfRange || isTooShort) {
-                postButton.disabled = true;
-            } else {
-                postButton.disabled = false;
-            }
-        }
+				if (hasOutOfRange || isTooShort) {
+					postButton.disabled = true;
+				} else {
+					postButton.disabled = false;
+				}
+			}
 
-        document.getElementById('glyphInput').addEventListener('input', function() {
-            const inputText = this.value;
-            const outputDiv = document.getElementById('output');
-            outputDiv.innerHTML = '';
+			document.getElementById('glyphInput').addEventListener('input', function () {
+				const inputText = this.value;
+				const outputDiv = document.getElementById('output');
+				outputDiv.innerHTML = '';
 
-            for (const char of inputText) {
-                const span = document.createElement('span');
-                span.textContent = char;
-                if (charList.includes(char)) {
-                    span.classList.add('in-range');
-                } else {
-                    span.classList.add('out-of-range');
-                }
-                outputDiv.appendChild(span);
-            }
+				for (const char of inputText) {
+					const span = document.createElement('span');
+					span.textContent = char;
+					if (charList.includes(char)) {
+						span.classList.add('in-range');
+					} else {
+						span.classList.add('out-of-range');
+					}
+					outputDiv.appendChild(span);
+				}
 
-            updateReferenceColors(inputText);
-            validateInput(inputText);
-        });
+				updateReferenceColors(inputText);
+				validateInput(inputText);
+			});
 
-        document.getElementById('postButton').addEventListener('click', async function() {
-            const inputText = document.getElementById('glyphInput').value;
-			const text = `「${inputText}」\n\n#第一屆基礎字造句大賽\nhttps://buttaiwan.github.io/writemyfont/contest.html`;
-            const url = `https://threads.net/intent/post?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
-        });
+			document.getElementById('postButton').addEventListener('click', async function () {
+				const inputText = document.getElementById('glyphInput').value;
+				const text = `「${inputText}」\n\n#第一屆基礎字造句大賽\nhttps://buttaiwan.github.io/writemyfont/contest.html`;
+				const url = `https://threads.net/intent/post?text=${encodeURIComponent(text)}`;
+				window.open(url, '_blank');
+			});
 
-		window.onload = function() {
-			validateInput('');
-			console.log(navigator.canShare());
-			//$('#postButton').toggle(!!navigator.canShare());
-			document.getElementById('glyphInput').focus();
-        };
-    </script>
-
-</body></html>
+			window.onload = function () {
+				validateInput('');
+				console.log(navigator.canShare());
+				//$('#postButton').toggle(!!navigator.canShare());
+				document.getElementById('glyphInput').focus();
+			};
+		</script>
+	</body>
+</html>
