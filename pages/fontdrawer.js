@@ -1,4 +1,4 @@
-const version = '0.595'; // 版本號
+const version = '0.596'; // 版本號
 const upm = 1000;
 const userAgent = navigator.userAgent.toLowerCase();
 const pressureDelta = 1.3;		// 筆壓模式跟一般模式的筆寬差異倍數 (舊筆壓模式用)
@@ -146,6 +146,7 @@ async function loadSettings() {
 		brushType: await loadFromDB('brushType', 0) * 1, 					// 筆刷類型，預設為 0
 		pressureMode: await loadFromDB('pressureMode', 'N') == 'Y',			// 筆壓模式，預設為 N
 		pressureEffect: await loadFromDB('pressureEffect', 'none'),			// 筆壓公式，預設為 none
+		penAngleMode: await loadFromDB('penAngleMode', 'N') == 'Y',			// 筆傾斜模式，預設為 N 
 		gridType: await loadFromDB('gridType', '3x3grid'),					// 格線類型，預設為 3x3grid
 		oldPressureMode: await loadFromDB('oldPressureMode', 'N') == 'Y',	// 啟用舊版筆壓模式，預設為 N
 		fontNameEng: await loadFromDB('fontNameEng') || 'MyFreehandFont',
@@ -637,12 +638,28 @@ $(document).ready(async function () {
 		}
 	}
 
+	let lastAngle = 0;
+	function getPenAngleValue(event) {
+		if (!settings.penAngleMode) return 0;
+		// 如果不是觸控筆，都回傳lastAngle
+		if (event.originalEvent.pointerType != 'pen') return lastAngle;
+		// 如果沒有傾斜資料，也回傳lastAngle
+		if (event.originalEvent.tiltX == 0 && event.originalEvent.tiltY == 0) return lastAngle;
+
+		let angle = Math.atan2(event.originalEvent.tiltY, event.originalEvent.tiltX); // * 180 / Math.PI; // 使用傾斜角
+		if (isNaN(angle)) return lastAngle;
+		angle -= 0.7
+		lastAngle = angle;
+		//console.log(angle, event.type, event.originalEvent.tiltX, event.originalEvent.tiltY);
+		return angle;
+	}
+
     // 儲存背景用於筆壓繪圖的即時預覽
     let backgroundImageData = null;
 	let lastX, lastY, lastLW, isMoved = false;
 	var eraseMode = false;
 
-	function drawBrush(ctx, brush, x, y, lw) {
+	function drawBrush(ctx, brush, x, y, lw, angle) {
 		if (userAgent.includes('macintosh') && userAgent.includes('safari') && !userAgent.includes('chrome')) {
 			// 在 Mac Safari 上使用臨時 canvas 繪製，避免直接繪圖造成污垢
 			// 不知道為什麼我的Mac-Safari直接繪圖會很髒，只好建立一個臨時的畫筆 canvas
@@ -652,11 +669,22 @@ $(document).ready(async function () {
 			brushCanvas.height = lw;
 			const brushCtx = brushCanvas.getContext('2d');
 			brushCtx.drawImage(brush, 0, 0, lw, lw);
-	
+			
 			ctx.drawImage(brushCanvas, x - lw/2, y - lw/2);
 		} else {
 			// 其他瀏覽器直接繪製
+			//ctx.drawImage(brush, x - lw/2, y - lw/2, lw+1, lw+1);
+
+			//console.log(`DrawBrush at ${x}, ${y} with lw=${lw} and angle=${angle}`);
+			// 將筆刷旋轉後再繪製
+			if (typeof(angle) == 'undefined') angle = 0;
+			ctx.save();
+			ctx.translate(x, y);
+			ctx.rotate(angle);
+			ctx.translate(-x, -y);
 			ctx.drawImage(brush, x - lw/2, y - lw/2, lw+1, lw+1);
+			ctx.restore();
+			//ctx.drawImage(brush, x - lw/2, y - lw/2, lw+1, lw+1);
 		}
 	}
 
@@ -705,6 +733,7 @@ $(document).ready(async function () {
 		if (!isDrawing) return;
 	    const { x, y } = getCanvasCoordinates(event);
 		var pressureVal = getPressureValue('move', event, x, y);
+		var angleVal = getPenAngleValue(event);
 		if (settings.pressureMode && pressureVal == null) return;		// 筆壓模式必須要有筆壓值
 
         if (settings.oldPressureMode) {							// 舊筆壓模式
@@ -736,7 +765,7 @@ $(document).ready(async function () {
 					var ty = (lastY + (y - lastY) * t / d) * ratio;
 					var tlw = lastLW + (lw - lastLW) * t / d; // 線寬漸變
 
-					drawBrush(ctx, brushes[settings.brushType], tx, ty, tlw);	
+					drawBrush(ctx, brushes[settings.brushType], tx, ty, tlw, angleVal);	
 				}		
 				events.push(`Move-DrawImage / ${pressureVal} / ${event.originalEvent.pointerType} / ${x}, ${y}, ${lw} (${lastX}, ${lastY}, ${lastLW}) ${d}`); // 儲存事件資訊
 			}
@@ -769,7 +798,7 @@ $(document).ready(async function () {
         } else {
 			if (!isMoved) {
 				ctx.globalCompositeOperation = eraseMode ? "destination-out" : "source-over"; // 如果是橡皮擦模式，則使用 destination-out，否則使用 source-over
-				drawBrush(ctx, brushes[settings.brushType], lastX*ratio, lastY*ratio, lastLW);
+				drawBrush(ctx, brushes[settings.brushType], lastX*ratio, lastY*ratio, lastLW, lastAngle);
 			}
 
 			lastX = null;
@@ -1076,6 +1105,7 @@ $(document).ready(async function () {
 		$('#scaleRateValue').text(scale + '%');
 
 		$('#pressureEffectSelect').val(settings.pressureEffect);
+		$('#penAngleMode').prop('checked', settings.penAngleMode);
 		$('#pressureDrawingEnabled').prop('checked', settings.oldPressureMode);
 		$('#gridTypeSelect').val(settings.gridType);
 
@@ -1101,6 +1131,7 @@ $(document).ready(async function () {
 		initCanvas(canvas);
 	});
 	$('#pressureEffectSelect').change(function () { updateSetting('pressureEffect', $(this).val()); });
+	$('#penAngleMode').on('click', function () { updateSetting('penAngleMode', $(this).prop('checked')); });
 	$('#gridTypeSelect').change(function () { 
 		updateSetting('gridType', $(this).val());
 		initCanvas(canvas);
