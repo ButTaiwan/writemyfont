@@ -1078,11 +1078,9 @@ $(document).ready(async function () {
 		}	
 		const font = await createFont(glyphs, gidMap, verts, ccmps);
 
-		// 建立下載連結
-		const link = document.createElement('a');
-		link.download = font.names.windows.postScriptName.en + '.otf'; //'drawing.otf';
-		link.href = window.URL.createObjectURL(new Blob([font.toArrayBuffer()]), {type: "font/opentype"});
-		link.click();
+		const fontBlob = new Blob([font.toArrayBuffer()], { type: 'font/opentype' });
+		const fontFilename = font.names.windows.postScriptName.en + '.otf';
+		await downloadOrShareBlob(fontBlob, fontFilename);
 
 		// 隱藏進度條
 		$naviContainer.show();
@@ -1226,15 +1224,34 @@ $(document).ready(async function () {
         };
     }
 
+	async function downloadOrShareBlob(blob, filename) {
+		const isDesktop = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+		const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+		const canUseShare = typeof navigator.share === 'function' && (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] }));
+
+		if (!isDesktop && canUseShare) {
+			try {
+				await navigator.share({ title: filename, files: [file] });
+				return;
+			} catch (e) {}
+		}
+		else {
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = filename;
+			link.click();
+			URL.revokeObjectURL(url);
+		}
+	}
+
 	// 匯出事件 - Debugger
 	$('#exportEventsButton').on('click', async function () {
 		const data = events.join('\n');
 		if (data.length > 0) {
 			const blob = new Blob([data], { type: 'text/plain' });
-			const link = document.createElement('a');
-			link.download = settings.fontNameEng + '-EventLog' + (new Date()).toISOString() + '.txt';
-			link.href = window.URL.createObjectURL(blob);
-			link.click();
+			const filename = settings.fontNameEng + '-EventLog' + (new Date()).toISOString() + '.txt';
+			await downloadOrShareBlob(blob, filename);
 		} else {
 			alert(fdrawer.noDataToExport);
 		}
@@ -1250,10 +1267,8 @@ $(document).ready(async function () {
 			const data = event.target.result.map(item => `${item.key}\t${item.value}`).join('\n');
 			if (data.length > 0) {
 				const blob = new Blob([data], { type: 'text/plain' });
-				const link = document.createElement('a');
-				link.download = settings.fontNameEng + '-' + (new Date()).toISOString() + '.txt';
-				link.href = window.URL.createObjectURL(blob);
-				link.click();
+				const filename = settings.fontNameEng + '-' + (new Date()).toISOString() + '.txt';
+				await downloadOrShareBlob(blob, filename);
 			} else {
 				alert(fdrawer.noDataToExport);
 			}
@@ -1303,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 判斷是否在 in-app browser 中
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
 
-    if (/FBAN|FBAV|Instagram|Line|Threads/i.test(userAgent)) {
+    if (/FBAN|FBAV|Instagram|Line|Threads|GSA/i.test(userAgent)) {
         // 如果是 Facebook、Instagram 或 Line 的 in-app browser
         alert(fdrawer.inAppNotice);
     }
