@@ -2,12 +2,15 @@ const version = '0.596'; // 版本號
 const upm = 1000;
 const userAgent = navigator.userAgent.toLowerCase();
 const pressureDelta = 1.3;		// 筆壓模式跟一般模式的筆寬差異倍數 (舊筆壓模式用)
-const dbName = fdrawer.dbName || 'FontDrawerDB'; // 使用 fdrawer.dbName，如果未定義則使用預設值
-const storeName = 'FontData';
+const dbName = fdrawer.dbName || 'FontDrawerDB';
 const events = [];
 
-let db;
 let settings = null;
+const dataStore = new Map();  // in-memory 快取
+let opfsFileHandle = null;    // OPFS 檔案 handle
+let opfsSaveTimer = null;     // 延遲寫入 timer
+let userFileHandle = null;    // 使用者手動綁定的備份檔案 handle
+let _handleDb = null;         // 獨立 IDB，用於持久化 userFileHandle
 
 const brushes = [];
 function addBrush(imgSrc) {
@@ -22,119 +25,224 @@ addBrush('iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAACXBIWXMAAAsTAAALEwEAmp
 addBrush('iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAACXBIWXMAAAsTAAALEwEAmpwYAAAGlmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgOS4xLWMwMDEgNzkuMTQ2Mjg5OSwgMjAyMy8wNi8yNS0yMDowMTo1NSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDI1LjAgKFdpbmRvd3MpIiB4bXA6Q3JlYXRlRGF0ZT0iMjAyNS0wNy0xOVQxMToyNToxMSswODowMCIgeG1wOk1vZGlmeURhdGU9IjIwMjUtMDctMTlUMTI6Mjk6MzIrMDg6MDAiIHhtcDpNZXRhZGF0YURhdGU9IjIwMjUtMDctMTlUMTI6Mjk6MzIrMDg6MDAiIGRjOmZvcm1hdD0iaW1hZ2UvcG5nIiBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjI3ZDI3MjBiLTUzYjgtMTM0NC04MGZjLTFkY2EwMzQxMzFlNiIgeG1wTU06RG9jdW1lbnRJRD0iYWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOmU5ZWFjMDdmLTNmMDQtYzc0NS1iYTcxLTJlNjJkY2U5NmM5YSIgeG1wTU06T3JpZ2luYWxEb2N1bWVudElEPSJ4bXAuZGlkOmE0ZTBhZjA2LTcyMTUtMWY0Ni1hODZkLWU3NzU4MzNmNmMwZCI+IDx4bXBNTTpIaXN0b3J5PiA8cmRmOlNlcT4gPHJkZjpsaSBzdEV2dDphY3Rpb249ImNyZWF0ZWQiIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6YTRlMGFmMDYtNzIxNS0xZjQ2LWE4NmQtZTc3NTgzM2Y2YzBkIiBzdEV2dDp3aGVuPSIyMDI1LTA3LTE5VDExOjI1OjExKzA4OjAwIiBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBQaG90b3Nob3AgMjUuMCAoV2luZG93cykiLz4gPHJkZjpsaSBzdEV2dDphY3Rpb249InNhdmVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOmFiZmViNmY4LTUwNzEtNWM0Ni04YjJkLTQxODYxYzE3NGIxYSIgc3RFdnQ6d2hlbj0iMjAyNS0wNy0xOVQxMjoyOTozMiswODowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIDI1LjAgKFdpbmRvd3MpIiBzdEV2dDpjaGFuZ2VkPSIvIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDoyN2QyNzIwYi01M2I4LTEzNDQtODBmYy0xZGNhMDM0MTMxZTYiIHN0RXZ0OndoZW49IjIwMjUtMDctMTlUMTI6Mjk6MzIrMDg6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCAyNS4wIChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz4oCt+pAAAQ7UlEQVR42u2dCXgURRbHKyQhAeQGRRBEoyI3inhwrCwKwnqh4okiAp6AriiH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');
 addBrush('iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAACXBIWXMAAAsTAAALEwEAmpwYAAAGlmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgOS4xLWMwMDEgNzkuMTQ2Mjg5OSwgMjAyMy8wNi8yNS0yMDowMTo1NSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0RXZ0PSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VFdmVudCMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDI1LjAgKFdpbmRvd3MpIiB4bXA6Q3JlYXRlRGF0ZT0iMjAyNS0wNy0xOVQxMToyNToxMSswODowMCIgeG1wOk1vZGlmeURhdGU9IjIwMjUtMDctMjFUMjI6MDc6MTErMDg6MDAiIHhtcDpNZXRhZGF0YURhdGU9IjIwMjUtMDctMjFUMjI6MDc6MTErMDg6MDAiIGRjOmZvcm1hdD0iaW1hZ2UvcG5nIiBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjg3MzBkNGY3LTY4ZmEtYjE0YS1iOGU3LTI2NjhhOTA2ZjU4MSIgeG1wTU06RG9jdW1lbnRJRD0iYWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOmE2NzljNjU1LTU3NmItYmE0NS04NzhlLWQ5MGE4NTNhZjIwZSIgeG1wTU06T3JpZ2luYWxEb2N1bWVudElEPSJ4bXAuZGlkOmE0ZTBhZjA2LTcyMTUtMWY0Ni1hODZkLWU3NzU4MzNmNmMwZCI+IDx4bXBNTTpIaXN0b3J5PiA8cmRmOlNlcT4gPHJkZjpsaSBzdEV2dDphY3Rpb249ImNyZWF0ZWQiIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6YTRlMGFmMDYtNzIxNS0xZjQ2LWE4NmQtZTc3NTgzM2Y2YzBkIiBzdEV2dDp3aGVuPSIyMDI1LTA3LTE5VDExOjI1OjExKzA4OjAwIiBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBQaG90b3Nob3AgMjUuMCAoV2luZG93cykiLz4gPHJkZjpsaSBzdEV2dDphY3Rpb249InNhdmVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjgyMTU3OTVjLTUwZDQtNzA0NC05NDczLTliY2FiOGEyNzdlNSIgc3RFdnQ6d2hlbj0iMjAyNS0wNy0xOVQxMTo0NzoxMiswODowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIDI1LjAgKFdpbmRvd3MpIiBzdEV2dDpjaGFuZ2VkPSIvIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo4NzMwZDRmNy02OGZhLWIxNGEtYjhlNy0yNjY4YTkwNmY1ODEiIHN0RXZ0OndoZW49IjIwMjUtMDctMjFUMjI6MDc6MTErMDg6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCAyNS4wIChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6uWwLnAAAD8UlEQVR42u3cX8ieYxwH8M/DNtMWYzP1yghZkpPNn5lJW5KccCT/QkQSIUorESf+RJGwE8RqlDAndkBJsjkgm/yZhq0l2cZsjL0z2+3gvt71WM+7533+Tdu+37p66u05uj7PfV339bt/99uoqkry/+WwTEEAApAEIABJAAKQBCAASQACkAQgAEkAApAEIABJAAKQBCAASQACkAQgAEkAApD0L+P2/kOj0ZiDadiFYXyDbeW7WzJlvae5H7exd3Nuo9FYgVMwBT9gAn7GJ1iDb/EhdheUfzKl3QOoquo/A/djB6oWYyvW4Su8iqtwFoYyrZ0B7JnvFgCTsXAUgFbjO7xW4C7FpExxbwAjuRaryhIzFojtWFuWqscxK1PdG8DhOB/LOrgaRsau8rkGD2I2jsPETP/YAZpzb9l8qy7HTryLezD3UN8zugEYV5aUF7Gh3AF1i7EGr+MOnFfusgLQBmAkR+MafN4DwMjYhpVYjBsxIwCdvbB3H9b3AaLCxoLxNBYEYOw5AQ+V03I/ILbjN3yEO8uJPABtMrlsrC+U29CdfYAYuYvajJcwJwDtc2Q5iL2xj5N0L2MlbkUjAO2zoMvzw1jGDjyH0wPQPnPx1oAgKnyMywPQPvPKGeKXAUH8igdwVABap6Eub1+ERfh+gFfFklL6CMAomYaL8TxWd1Ds63Qsx9UBGD2Tymb9TIH4c0AQa9Xl9eMDMHrOxROlTrR9QBCb8CzODsDoObX8WleXgt/uPiPsLBCLcRnGB2D0Q91NWDGgq+Fv/IQ3ceX+Xp4OBIDmzMfbA7xr+hFL1U8ATwrA6JmBJ/HXgCA24p0CceIgl6cDFaA5t/SxAtuq1LGsQEwZRO3pYABoLnUsHeDytBw3BKB9jsXDpSQxCIh16qd2jQC0zxX4YEAQX+I2dYdHANpkJp5St1U2P+TpdWzF+7hOl90dhwrASMbherxXJm+4TxAbSuFvPo7oZHk61ACaMxuPqZ+ubepTIfB3dal9ZgDGnqnqxuKXC8bmPl0Vj+LkAHSWWbi9LCdf672Z4LNSRpkegM4yHRfiLvVj1C09QGxWt++fGYDuNu0hdYl8IT7tseh3t7qjMABdZEKpCZ1TNu9VpWa0rcPSxhKcEYD+5BI8Ukogqzs8xM0PQP8yhAtwM15Rd3wM4499IKzHgub5bvWSXqa2s4xXv8wyXt1uP0/9ZO80dUvlcLk7mlTOHV9UVbWnayMAgztnTMUx6jdOZ5SC4S6sr6pqUcsdOUtQ39P8ax5pGpu4zyUo2b/JvyoIQACSAAQgCUAAkgAEIAlAAJIABCAJQACSAAQgCUAAkgAEIAlAAJIABCAJwMGVfwFk+B+8bph6jgAAAABJRU5ErkJggg==');
 
-// 初始化 IndexedDB
-function initDB() {
-	return new Promise((resolve, reject) => {
-		const request = indexedDB.open(dbName, 1);
+// ── 儲存層：OPFS 為主，IndexedDB 為備援 ────────────────────────────────────
 
-		request.onupgradeneeded = function (event) {
-			db = event.target.result;
-			if (!db.objectStoreNames.contains(storeName)) {
-				db.createObjectStore(storeName, { keyPath: 'key' });
+const _IDB_STORE = 'FontData';
+let _idb = null;
+
+// 解析 tab 分隔的文字格式並寫入 dataStore
+const _parseTextIntoStore = (text) => {
+	for (const line of text.split('\n')) {
+		if (!line.trim()) continue;
+		const idx = line.indexOf('\t');
+		if (idx < 0) continue;
+		dataStore.set(line.substring(0, idx), line.substring(idx + 1));
+	}
+};
+
+// 同上，但寫入指定的 Map（用於比對備份檔與 OPFS 資料量）
+const _parseTextIntoStore_toMap = (text, map) => {
+	for (const line of text.split('\n')) {
+		if (!line.trim()) continue;
+		const idx = line.indexOf('\t');
+		if (idx < 0) continue;
+		map.set(line.substring(0, idx), line.substring(idx + 1));
+	}
+};
+
+// 初始化儲存：優先 OPFS，失敗則用 IndexedDB
+const initStorage = async () => {
+	if (navigator.storage?.getDirectory) {
+		try {
+			const root = await navigator.storage.getDirectory();
+			const handle = await root.getFileHandle(dbName + '-autosave.txt', { create: true });
+			// 確認此瀏覽器支援 OPFS 寫入（Safari < 16.4 不支援）
+			const testW = await handle.createWritable();
+			await testW.close();
+			opfsFileHandle = handle;
+
+			// 讀入現有資料
+			const file = await opfsFileHandle.getFile();
+			_parseTextIntoStore(await file.text());
+
+			// OPFS 是空的 → 從舊 IndexedDB 一次性搬移資料
+			if (dataStore.size === 0) await _migrateFromIndexedDB();
+
+			// 申請瀏覽器不主動清除此來源的儲存空間
+			navigator.storage.persist().catch(() => {});
+			return;
+		} catch (e) {
+			console.warn('OPFS 不可用，改用 IndexedDB：', e);
+			opfsFileHandle = null;
+		}
+	}
+	// 備援：IndexedDB
+	await _initIDB();
+	await _loadIDBIntoStore();
+};
+
+// ── CRUD（操作 Map，再非同步寫入持久層）──────────────────────────────────────
+
+const saveToDB = (key, value) => {
+	dataStore.set(key, value != null ? String(value) : value);
+	_scheduleFlush();
+	return Promise.resolve();
+};
+
+const loadFromDB = (key, defaultValue = null) => {
+	const val = dataStore.get(key);
+	return Promise.resolve(val !== undefined ? val : defaultValue);
+};
+
+const deleteFromDB = (key) => {
+	dataStore.delete(key);
+	_scheduleFlush();
+	return Promise.resolve();
+};
+
+const clearDB = () => {
+	dataStore.clear();
+	_scheduleFlush();
+	return Promise.resolve();
+};
+
+const countGlyphFromDB = () => {
+	let count = 0;
+	for (const key of dataStore.keys()) {
+		if (key.startsWith('g_')) count++;
+	}
+	return Promise.resolve(count);
+};
+
+// ── 延遲寫入持久層 ────────────────────────────────────────────────────────────
+
+const _scheduleFlush = () => {
+	if (opfsSaveTimer) clearTimeout(opfsSaveTimer);
+	opfsSaveTimer = setTimeout(_flush, 2000);
+};
+
+const _FLUSH_CHUNK_SIZE = 8 * 1024 * 1024; // 8MB 分塊寫入，避免單次大寫入失敗
+
+const _writeInChunks = async (handle, data) => {
+	const writable = await handle.createWritable();
+	try {
+		for (let i = 0; i < data.length; i += _FLUSH_CHUNK_SIZE) {
+			await writable.write(data.slice(i, i + _FLUSH_CHUNK_SIZE));
+		}
+		await writable.close();
+	} catch (e) {
+		await writable.abort().catch(() => {});
+		throw e;
+	}
+};
+
+const _flush = async () => {
+	const data = Array.from(dataStore.entries())
+		.map(([k, v]) => `${k}\t${v}`)
+		.join('\n');
+
+	if (opfsFileHandle) {
+		try {
+			await _writeInChunks(opfsFileHandle, data);
+		} catch (e) {}
+	} else if (_idb) {
+		await _flushToIDB();
+	}
+
+	if (userFileHandle) {
+		try {
+			const perm = await userFileHandle.queryPermission({ mode: 'readwrite' });
+			if (perm === 'granted') {
+				await _writeInChunks(userFileHandle, data);
 			}
-		};
+		} catch (e) {}
+	}
+};
 
-		request.onsuccess = function (event) {
-			db = event.target.result;
-			resolve(db);
-		};
+// ── 使用者備份檔案 handle 持久化（獨立 IDB，不受 _flushToIDB 清除影響）────────────
 
-		request.onerror = function (event) {
-			reject(event.target.error);
-		};
-	});
-}
+const _initHandleDB = () => new Promise((resolve, reject) => {
+	const req = indexedDB.open(dbName + '_handles', 1);
+	req.onupgradeneeded = (e) => e.target.result.createObjectStore('handles', { keyPath: 'key' });
+	req.onsuccess = (e) => { _handleDb = e.target.result; resolve(); };
+	req.onerror = (e) => reject(e.target.error);
+});
 
-// 儲存資料到 IndexedDB
-function saveToDB(key, value) {
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([storeName], 'readwrite');
-		const store = transaction.objectStore(storeName);
-		const request = store.put({ key, value });
+const _loadUserFileHandle = async () => {
+	try {
+		if (!_handleDb) await _initHandleDB();
+		return new Promise((resolve) => {
+			const req = _handleDb.transaction('handles', 'readonly').objectStore('handles').get('userFile');
+			req.onsuccess = (e) => resolve(e.target.result?.value || null);
+			req.onerror = () => resolve(null);
+		});
+	} catch (e) { return null; }
+};
 
-		request.onsuccess = function () {
-			resolve();
-		};
-
-		request.onerror = function (event) {
-			reject(event.target.error);
-		};
-	});
-}
-
-// 從 IndexedDB 讀取資料
-function loadFromDB(key, defaultValue = null) {
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([storeName], 'readonly');
-		const store = transaction.objectStore(storeName);
-		const request = store.get(key);
-
-		request.onsuccess = function (event) {
-			resolve(event.target.result ? event.target.result.value : defaultValue);
-		};
-
-		request.onerror = function (event) {
-			reject(event.target.error);
-		};
-	});
-}
-
-function countGlyphFromDB() {
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([storeName], 'readonly');
-		const store = transaction.objectStore(storeName);
-		const cursorRequest = store.openCursor();
-
-		let count = 0;
-		cursorRequest.onsuccess = function (event) {
-			const cursor = event.target.result;
-			if (cursor) {
-				if (cursor.key.startsWith('g_')) count++;
-				cursor.continue();
+const _saveUserFileHandle = async (handle) => {
+	try {
+		if (!_handleDb) await _initHandleDB();
+		return new Promise((resolve) => {
+			const tx = _handleDb.transaction('handles', 'readwrite');
+			if (handle) {
+				tx.objectStore('handles').put({ key: 'userFile', value: handle });
 			} else {
-				resolve(count); // 當游標完成時，返回計數
+				tx.objectStore('handles').delete('userFile');
 			}
-		};
+			tx.oncomplete = resolve;
+			tx.onerror = resolve;
+		});
+	} catch (e) {}
+};
 
-		cursorRequest.onerror = function (event) {
-			reject(event.target.error);
-		};
-	});
-}
+// ── IndexedDB 備援 ────────────────────────────────────────────────────────────
 
-// 刪除 IndexedDB 中的資料
-function deleteFromDB(key) {
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([storeName], 'readwrite');
-		const store = transaction.objectStore(storeName);
-		const request = store.delete(key);
+const _initIDB = () => new Promise((resolve, reject) => {
+	const req = indexedDB.open(dbName, 1);
+	req.onupgradeneeded = (e) => {
+		const idb = e.target.result;
+		if (!idb.objectStoreNames.contains(_IDB_STORE)) {
+			idb.createObjectStore(_IDB_STORE, { keyPath: 'key' });
+		}
+	};
+	req.onsuccess = (e) => { _idb = e.target.result; resolve(); };
+	req.onerror = (e) => reject(e.target.error);
+});
 
-		request.onsuccess = function () {
-			resolve();
-		};
+const _loadIDBIntoStore = () => new Promise((resolve) => {
+	const tx = _idb.transaction([_IDB_STORE], 'readonly');
+	const req = tx.objectStore(_IDB_STORE).getAll();
+	req.onsuccess = (e) => {
+		for (const item of e.target.result) dataStore.set(item.key, item.value);
+		resolve();
+	};
+	req.onerror = resolve;
+});
 
-		request.onerror = function (event) {
-			reject(event.target.error);
-		};
-	});
-}
+const _flushToIDB = () => new Promise((resolve) => {
+	const tx = _idb.transaction([_IDB_STORE], 'readwrite');
+	const store = tx.objectStore(_IDB_STORE);
+	store.clear();
+	for (const [key, value] of dataStore.entries()) store.put({ key, value });
+	tx.oncomplete = resolve;
+	tx.onerror = resolve;
+});
 
-// 清除 IndexedDB
-function clearDB() {
-	return new Promise((resolve, reject) => {
-		const transaction = db.transaction([storeName], 'readwrite');
-		const store = transaction.objectStore(storeName);
-		const request = store.clear();
+// 首次使用 OPFS 時，從舊 IndexedDB 搬移已有資料（一次性）
+const _migrateFromIndexedDB = async () => {
+	try {
+		await _initIDB();
+		await _loadIDBIntoStore();
+		if (dataStore.size > 0) {
+			await _flush(); // 立即寫入 OPFS
+			console.log(`已從 IndexedDB 搬移 ${dataStore.size} 筆資料至 OPFS`);
+		}
+	} catch {
+		// 沒有舊資料，直接從頭開始
+	}
+};
 
-		request.onsuccess = function () {
-			resolve();
-		};
-
-		request.onerror = function (event) {
-			reject(event.target.error);
-		};
-	});
-}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // 讀取設定
 async function loadSettings() {
@@ -368,9 +476,37 @@ $(document).ready(async function () {
     const $progressBar = $('#progress-bar');
     const $progressText = $('#progress-text');
 
-    // 初始化 IndexedDB
-    initDB().then(async () => {
-        console.log('IndexedDB 起動完成');
+    // 初始化儲存層（OPFS 優先）
+    initStorage().then(async () => {
+		// 嘗試恢復上次綁定的使用者備份檔案
+		const storedHandle = await _loadUserFileHandle();
+		if (storedHandle) {
+			try {
+				const perm = await storedHandle.queryPermission({ mode: 'readwrite' });
+				userFileHandle = storedHandle;
+
+				if (perm === 'granted') {
+					// 有讀寫權限：讀取備份檔內容，以備份檔為準更新 dataStore
+					const backupFile = await userFileHandle.getFile();
+					const backupText = await backupFile.text();
+					const backupMap = new Map();
+					_parseTextIntoStore_toMap(backupText, backupMap);
+
+					if (backupMap.size > dataStore.size) {
+						// 備份檔資料較新（筆數更多），以備份檔覆蓋 dataStore 並同步至 OPFS
+						dataStore.clear();
+						for (const [k, v] of backupMap) dataStore.set(k, v);
+						await _flush();
+					}
+				} else {
+					// 需要使用者授權才能讀取：顯示提示橫幅
+					$('#backupSyncBanner').show();
+				}
+			} catch (e) {
+				userFileHandle = null;
+			}
+		}
+		updateUserFileStatus();
 		settings = await loadSettings();
 		initListSelect($listSelect);
 		initCanvas(canvas);	// 初始化九宮格底圖
@@ -389,7 +525,7 @@ $(document).ready(async function () {
 		$('#spanDoneCount').text(await countGlyphFromDB());
 
     }).catch((error) => {
-        console.error('IndexedDB 起動失敗', error);
+        console.error('儲存層起動失敗', error);
     });
 
 	// (舊筆壓模式) 初始化 PressureDrawing 實例
@@ -870,6 +1006,50 @@ $(document).ready(async function () {
 	$('#moveUpButton').on('click', function () { moveGlyph(0, -10); }); // 向上移動 10px
 	$('#moveDownButton').on('click', function () { moveGlyph(0, 10); }); // 向下移動 10px
 
+	async function centerGlyph() {
+		const savedCanvas = await loadFromDB('g_' + nowGlyph);
+		if (!savedCanvas) return;
+		undoStack.push(canvas.toDataURL());
+
+		const img = new Image();
+		img.src = savedCanvas;
+		img.onload = function () {
+			const tempCanvas = document.createElement('canvas');
+			tempCanvas.width = canvas.width;
+			tempCanvas.height = canvas.height;
+			const tempCtx = tempCanvas.getContext('2d');
+			tempCtx.drawImage(img, 0, 0);
+			const imageData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
+			const data = imageData.data;
+
+			let minX = canvas.width, maxX = 0, minY = canvas.height, maxY = 0;
+			for (let y = 0; y < canvas.height; y++) {
+				for (let x = 0; x < canvas.width; x++) {
+					const alpha = data[(y * canvas.width + x) * 4 + 3];
+					if (alpha > 0) {
+						if (x < minX) minX = x;
+						if (x > maxX) maxX = x;
+						if (y < minY) minY = y;
+						if (y > maxY) maxY = y;
+					}
+				}
+			}
+
+			if (minX > maxX || minY > maxY) return;
+
+			const contentCenterX = (minX + maxX) / 2;
+			const contentCenterY = (minY + maxY) / 2;
+			const xoff = Math.round(canvas.width / 2 - contentCenterX);
+			const yoff = Math.round(canvas.height / 2 - contentCenterY);
+
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(img, xoff, yoff);
+			saveToLocalDB();
+		};
+	}
+
+	$('#centerButton').on('click', function () { centerGlyph(); });
+
 	// 支援鍵盤方向鍵操作
 	$(document).on('keydown', function (event) {
 		switch (event.key) {
@@ -1188,6 +1368,16 @@ $(document).ready(async function () {
         $('#listup-container').hide();
     });
 
+	// 顯示按鈕說明
+	$('#guideButton').on('click', function () {
+		$('#guide-container').show();
+	});
+
+	// 關閉按鈕說明
+	$('#closeGuideButton').on('click', function () {
+		$('#guide-container').hide();
+	});
+
 	// 顯示提示畫面
 	$('#hintButton').on('click', function () {
 		$('#hint-container').show();
@@ -1240,54 +1430,201 @@ $(document).ready(async function () {
 		}
 	});
 
-	// 匯出資料
+	// 匯出資料（下載備份）
 	$('#exportDataButton').on('click', async function () {
-		const transaction = db.transaction([storeName], 'readonly');
-		const store = transaction.objectStore(storeName);
-		const request = store.getAll();
-
-		request.onsuccess = async function (event) {
-			const data = event.target.result.map(item => `${item.key}\t${item.value}`).join('\n');
-			if (data.length > 0) {
-				const blob = new Blob([data], { type: 'text/plain' });
-				const link = document.createElement('a');
-				link.download = settings.fontNameEng + '-' + (new Date()).toISOString() + '.txt';
-				link.href = window.URL.createObjectURL(blob);
-				link.click();
-			} else {
-				alert(fdrawer.noDataToExport);
-			}
-		};
+		const data = Array.from(dataStore.entries())
+			.map(([k, v]) => `${k}\t${v}`)
+			.join('\n');
+		if (data.length > 0) {
+			const blob = new Blob([data], { type: 'text/plain' });
+			const link = document.createElement('a');
+			link.download = settings.fontNameEng + '-' + (new Date()).toISOString() + '.txt';
+			link.href = window.URL.createObjectURL(blob);
+			link.click();
+		} else {
+			alert(fdrawer.noDataToExport);
+		}
 	});
 
-    // 匯入資料
+	// 手動儲存至持久層
+	let _isSaving = false;
+	$('#manualSaveButton').on('click', async function () {
+		if (_isSaving) return;
+		_isSaving = true;
+		const btn = $(this);
+		btn.text(fdrawer.saving);
+		try {
+			// 若使用者備份檔案權限為 prompt，在使用者手勢內請求授權
+			if (userFileHandle) {
+				const perm = await userFileHandle.queryPermission({ mode: 'readwrite' });
+				if (perm === 'prompt') {
+					await userFileHandle.requestPermission({ mode: 'readwrite' });
+				}
+			}
+			await _flush();
+			const count = await countGlyphFromDB();
+			$('#spanDoneCount').text(count);
+			updateUserFileStatus();
+			btn.text(fdrawer.saveDone);
+		} catch (e) {
+			btn.text(fdrawer.saveFailed);
+		} finally {
+			setTimeout(() => { _isSaving = false; btn.text(fdrawer.manualSaveBtn); }, 2000);
+		}
+	});
+
+    // 匯入資料（支援多個檔案，可選擇覆蓋或合併）
     $('#importDataFile').on('change', async function () {
-        if (confirm(fdrawer.importConfirm)) {
-            const fileInput = $(this);
-            const file = fileInput[0].files[0];
-            if (file) {
+        const fileInput = $(this);
+        const files = Array.from(fileInput[0].files);
+        if (files.length === 0) return;
+
+        const shouldReplace = confirm(fdrawer.importModeConfirm);
+        if (!confirm(shouldReplace ? fdrawer.importConfirm : fdrawer.importMergeConfirm)) {
+            $(this).val('');
+            return;
+        }
+
+        if (shouldReplace) {
+            await clearDB();
+        }
+
+        let totalImported = 0;
+        let totalSkipped = 0;
+        for (const file of files) {
+            await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = async function (e) {
-                    await clearDB(); // 清除現有的 IndexedDB 資料
-                    const data = e.target.result;
-                    const lines = data.split('\n');
-                    for (const line of lines) {
-                        if (line.trim() === '') continue; // 跳過空行
-                        const parts = line.split('\t');
-                        if (parts.length < 2) continue; // 如果格式不正確，跳過
-                        const key = parts[0].trim();
-                        const value = parts[1].trim();
-                        await saveToDB(key, value);
+                    try {
+                        const text = e.target.result;
+                        const lines = text.split('\n');
+                        let count = 0;
+                        let skipped = 0;
+                        for (const line of lines) {
+                            if (line.trim() === '') { skipped++; continue; }
+                            const tabIdx = line.indexOf('\t');
+                            if (tabIdx < 0) { skipped++; continue; }
+                            const key = line.substring(0, tabIdx).trim();
+                            if (key.startsWith('__')) { skipped++; continue; }
+                            const value = line.substring(tabIdx + 1);
+                            await saveToDB(key, value);
+                            count++;
+                        }
+                        totalImported += count;
+                        totalSkipped += skipped;
+                        resolve();
+                    } catch (err) {
+                        reject(err);
                     }
-                    alert(fdrawer.importDone);
-                    location.reload(); // 重新載入頁面
+                };
+                reader.onerror = (e) => {
+                    reject(new Error(`讀取檔案失敗：${file.name}`));
                 };
                 reader.readAsText(file);
-            }
-        } else {
-            $(this).val(''); // 清除選擇的檔案
+            });
         }
+
+        const countAfter = await countGlyphFromDB();
+        await _flush();
+
+        // 更新底部計數，不自動重新載入（確認資料正確後請手動重新整理）
+        $('#spanDoneCount').text(countAfter);
+        $(this).val('');
+        alert(fdrawer.importDone);
     });
+
+	// ── 使用者備份檔案綁定 ────────────────────────────────────────────────────────
+
+	const updateUserFileStatus = () => {
+		if (!userFileHandle) {
+			$('#userFileStatus').text(fdrawer.localFileUnbound);
+			$('#bindUserFileButton').show();
+			$('#unbindUserFileButton').hide();
+			$('#reauthorizeUserFileButton').hide();
+			return;
+		}
+		userFileHandle.queryPermission({ mode: 'readwrite' }).then((perm) => {
+			if (perm === 'granted') {
+				$('#userFileStatus').text(fdrawer.localFileBoundPrefix + userFileHandle.name);
+				$('#bindUserFileButton').hide();
+				$('#unbindUserFileButton').show();
+				$('#reauthorizeUserFileButton').hide();
+			} else {
+				$('#userFileStatus').text(fdrawer.localFileNeedReauth + userFileHandle.name);
+				$('#bindUserFileButton').hide();
+				$('#unbindUserFileButton').show();
+				$('#reauthorizeUserFileButton').show();
+			}
+		}).catch(() => {
+			$('#userFileStatus').text(fdrawer.localFileUnbound);
+			$('#bindUserFileButton').show();
+			$('#unbindUserFileButton').hide();
+			$('#reauthorizeUserFileButton').hide();
+		});
+	};
+
+	$('#bindUserFileButton').on('click', async function () {
+		if (!window.showSaveFilePicker) {
+			alert(fdrawer.localFileUnsupported);
+			return;
+		}
+		try {
+			const langSuffix = (fdrawer.fontLang || 'zh').split('-')[0];
+			const handle = await window.showSaveFilePicker({
+				types: [{ description: 'Font Data', accept: { 'text/plain': ['.txt'] } }],
+				suggestedName: (settings.fontNameEng || 'MyFont') + '-backup-' + langSuffix + '.txt',
+			});
+			userFileHandle = handle;
+			await _saveUserFileHandle(handle);
+			await _flush();
+			updateUserFileStatus();
+			alert(fdrawer.localFileBoundDone);
+		} catch (e) {
+			if (e.name !== 'AbortError') console.error('綁定備份檔案失敗：', e);
+		}
+	});
+
+	$('#unbindUserFileButton').on('click', async function () {
+		userFileHandle = null;
+		await _saveUserFileHandle(null);
+		updateUserFileStatus();
+	});
+
+	$('#reauthorizeUserFileButton').on('click', async function () {
+		if (!userFileHandle) return;
+		try {
+			const perm = await userFileHandle.requestPermission({ mode: 'readwrite' });
+			if (perm === 'granted') {
+				await _flush();
+				updateUserFileStatus();
+			}
+		} catch (e) {
+			console.error('重新授權失敗：', e);
+		}
+	});
+
+	// 備份檔同步橫幅：頁面載入時若備份檔需授權才能讀取，點此授權並同步
+	$('#backupSyncButton').on('click', async function () {
+		if (!userFileHandle) return;
+		try {
+			const perm = await userFileHandle.requestPermission({ mode: 'readwrite' });
+			if (perm !== 'granted') return;
+
+			const backupFile = await userFileHandle.getFile();
+			const backupText = await backupFile.text();
+			const backupMap = new Map();
+			_parseTextIntoStore_toMap(backupText, backupMap);
+			if (backupMap.size > dataStore.size) {
+				dataStore.clear();
+				for (const [k, v] of backupMap) dataStore.set(k, v);
+				await _flush();
+				$('#spanDoneCount').text(await countGlyphFromDB());
+			}
+			$('#backupSyncBanner').hide();
+			updateUserFileStatus();
+		} catch (e) {}
+
+	});
 
     // 修改清除所有資料的功能
     $('#clearAllButton').on('click', async function () {

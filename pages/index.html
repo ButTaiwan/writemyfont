@@ -7,11 +7,15 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body lang="zh-TW">
+	<div id="backupSyncBanner" style="display:none;background:#fff3cd;padding:8px 12px;font-size:14px;">
+		⚠️ 偵測到本機備份檔，需授權才能讀取。<button id="backupSyncButton">授權並載入備份</button>
+	</div>
 	<div id="list-container">
 		<label for="listSelect">字表：</label>
 		<select id="listSelect"></select>
 		<span class="butt" id="canvasListButton">👓</span>
 		<span class="butt" id="findButton">🔍</span>
+		<span class="butt" id="guideButton">📖</span>
     </div>
 
     <div id="demo-container">
@@ -39,7 +43,9 @@
 		<span class="butt" id="moveRightButton">➡️</span>
 		<span class="butt" id="moveUpButton">⬆️</span>
 		<span class="butt" id="moveDownButton">⬇️</span>
+		<span class="butt" id="centerButton">🎯</span>
 		<span class="butt" id="undoButton">↩️</span>
+		<span class="butt" id="manualSaveButton">🗄️</span>
     </div>
 
 	<div id="navi-container">
@@ -48,6 +54,42 @@
 		<span id="spanDoneCount">-</span>
 		<span class="butt" id="downloadButton">💾</span>
     </div>
+	<div id="guide-container" class="dialog">
+		<div class="dialog-body">
+			<span id="closeGuideButton" class="close">×</span>
+			<h2>按鈕說明</h2>
+			<table class="guide-table">
+				<tbody>
+					<tr class="guide-section"><td colspan="2">字表列</td></tr>
+					<tr><td>👈 / 👉</td><td>切換字符 — 切換到上一個或下一個字符</td></tr>
+					<tr><td>👓</td><td>字符總覽 — 顯示所有字符的完成狀況列表</td></tr>
+					<tr><td>🔍</td><td>尋找字符 — 跳至指定字符</td></tr>
+					<tr class="guide-section"><td colspan="2">工具列</td></tr>
+					<tr><td>筆刷</td><td>筆刷選擇 — 點擊切換書寫用的筆刷樣式</td></tr>
+					<tr><td>筆壓</td><td>筆壓感應 — 開啟或關閉筆壓模式（支援筆壓設備）</td></tr>
+					<tr><td>🖌️</td><td>畫筆模式 — 切換為書寫筆（預設模式）</td></tr>
+					<tr><td>🚿</td><td>橡皮擦 — 切換為橡皮擦模式，用來擦除筆跡</td></tr>
+					<tr><td>線條粗細</td><td>拖曳滑桿調整筆畫粗細大小</td></tr>
+					<tr class="guide-section"><td colspan="2">操作按鈕</td></tr>
+					<tr><td>🚮</td><td>清除畫面 — 清除整個畫布上的所有筆跡</td></tr>
+					<tr><td>⬅️</td><td>左移 — 將筆跡向左移動 10px</td></tr>
+					<tr><td>➡️</td><td>右移 — 將筆跡向右移動 10px</td></tr>
+					<tr><td>⬆️</td><td>上移 — 將筆跡向上移動 10px</td></tr>
+					<tr><td>⬇️</td><td>下移 — 將筆跡向下移動 10px</td></tr>
+					<tr><td>🎯</td><td>垂直水平置中 — 自動將筆跡置中於字身框</td></tr>
+					<tr><td>↩️</td><td>返回上一步 — 撤銷最後一筆操作（支援鍵盤方向鍵）</td></tr>
+					<tr><td>🗄️</td><td>本地儲存 — 立即將目前資料儲存至瀏覽器本地</td></tr>
+					<tr class="guide-section"><td colspan="2">導覽列</td></tr>
+					<tr><td>💡</td><td>提示 — 顯示使用說明與版本資訊</td></tr>
+					<tr><td>⚙️</td><td>字型設定 — 修改字型名稱、格線樣式、縮放率等設定</td></tr>
+					<tr><td>數字</td><td>已完成字符數 — 顯示目前已書寫完成的字符數量</td></tr>
+					<tr><td>💾</td><td>下載 — 匯出字型 OTF 檔案或匯入／備份字型資料</td></tr>
+				</tbody>
+			</table>
+			<p class="dummy"></p>
+		</div>
+	</div>
+
 	<div id="progress-container">
 		<progress id="progress-bar" value="0" max="100"></progress>
 		<span id="progress-text">0%</span>
@@ -166,10 +208,22 @@
 			<br />
 			<hr />
 			<h3>匯入先前備份的資料</h3>
-			<input type="file" id="importDataFile" accept=".txt" />
+			<span class="note">可同時選取多個備份檔合併匯入</span><br />
+			<input type="file" id="importDataFile" accept=".txt" multiple />
+			<br />
+			<h3>手動儲存</h3>
+			<span class="note">點擊畫面下方的 🗄️ 按鈕即可立即儲存至本地。</span>
 			<br />
 			<h3>匯出編輯中資料</h3>
 			<button id="exportDataButton">備份工作中的字型資料</button>
+			<br />
+			<hr />
+			<h3>本機自動備份</h3>
+			<span class="note">綁定後每次繪製將自動備份至本機檔案（需 Chrome 或 Edge）</span><br>
+			<span id="userFileStatus"></span><br>
+			<button id="bindUserFileButton">綁定本機備份檔案</button>
+			<button id="unbindUserFileButton" hidden>解除綁定</button>
+			<button id="reauthorizeUserFileButton" hidden>重新授權</button>
 			<br />
 			<p class="dummy"></p>
 		</div>
@@ -199,10 +253,21 @@
 			notFound: '查無此字符！',
 			confirmAdd: '請問要新增到使用者字表嗎？',
 			noDataToExport: '沒有可匯出的資料。',
-			importConfirm: '確定要匯入資料嗎？這將清除目前編輯中的所有資料。',
+			importModeConfirm: '是否要覆蓋現有資料？\n（確定 = 清除後匯入，取消 = 與現有資料合併）',
+			importConfirm: '確定要清除所有現有資料再匯入嗎？',
+			importMergeConfirm: '確定要將所選檔案合併匯入現有資料中嗎？',
 			importDone: '匯入完成。',
 			clearConfirm: '確定要清除所有寫過的字嗎？',
 			clearDone: '已清除。',
+			manualSaveBtn: '🗄️',
+			saving: '⏳',
+			saveDone: '✅',
+			saveFailed: '❌',
+			localFileUnbound: '未綁定',
+			localFileBoundPrefix: '已綁定：',
+			localFileNeedReauth: '需重新授權：',
+			localFileBoundDone: '已綁定！之後每次繪製將自動備份至此檔案。',
+			localFileUnsupported: '您的瀏覽器不支援此功能，請使用 Chrome 或 Edge。',
 			welcomeTitle: '歡迎使用手寫字型產生器！',
 			settingsTitle: '字型設定',
 			inAppNotice: '請使用裝置瀏覽器開啟以獲得最佳使用體驗。',

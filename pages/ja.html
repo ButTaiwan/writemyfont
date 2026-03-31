@@ -7,11 +7,15 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body lang="ja">
+	<div id="backupSyncBanner" style="display:none;background:#fff3cd;padding:8px 12px;font-size:14px;">
+		⚠️ バックアップファイルを検出しました。読み込むには認証が必要です。<button id="backupSyncButton">認証してバックアップを読み込む</button>
+	</div>
 	<div id="list-container">
 		<label for="listSelect">範囲：</label>
 		<select id="listSelect"></select>
 		<span class="butt" id="canvasListButton">👓</span>
 		<span class="butt" id="findButton">🔍</span>
+		<span class="butt" id="guideButton">📖</span>
     </div>
 
     <div id="demo-container">
@@ -39,7 +43,9 @@
 		<span class="butt" id="moveRightButton">➡️</span>
 		<span class="butt" id="moveUpButton">⬆️</span>
 		<span class="butt" id="moveDownButton">⬇️</span>
+		<span class="butt" id="centerButton">🎯</span>
 		<span class="butt" id="undoButton">↩️</span>
+		<span class="butt" id="manualSaveButton">🗄️</span>
     </div>
 
 	<div id="navi-container">
@@ -48,6 +54,42 @@
 		<span id="spanDoneCount">-</span>
 		<span class="butt" id="downloadButton">💾</span>
     </div>
+	<div id="guide-container" class="dialog">
+		<div class="dialog-body">
+			<span id="closeGuideButton" class="close">×</span>
+			<h2>ボタン説明</h2>
+			<table class="guide-table">
+				<tbody>
+					<tr class="guide-section"><td colspan="2">文字リスト</td></tr>
+					<tr><td>👈 / 👉</td><td>文字切替 — 前後の字符に切り替える</td></tr>
+					<tr><td>👓</td><td>字符一覧 — 全字符の完了状況リストを表示</td></tr>
+					<tr><td>🔍</td><td>字符検索 — 指定した字符に移動する</td></tr>
+					<tr class="guide-section"><td colspan="2">ツールバー</td></tr>
+					<tr><td>筆</td><td>ブラシ選択 — タップして筆ブラシを切り替える</td></tr>
+					<tr><td>筆圧</td><td>筆圧感知 — 筆圧モードのオン／オフ切替</td></tr>
+					<tr><td>🖌️</td><td>ペンモード — 書き込みモードに切り替える（既定）</td></tr>
+					<tr><td>🚿</td><td>消しゴム — 消しゴムモードに切り替える</td></tr>
+					<tr><td>線の太さ</td><td>スライダーで線の太さを調整する</td></tr>
+					<tr class="guide-section"><td colspan="2">操作ボタン</td></tr>
+					<tr><td>🚮</td><td>画面クリア — キャンバス上の全ての筆跡を消去</td></tr>
+					<tr><td>⬅️</td><td>左移動 — 筆跡を左に 10px 移動</td></tr>
+					<tr><td>➡️</td><td>右移動 — 筆跡を右に 10px 移動</td></tr>
+					<tr><td>⬆️</td><td>上移動 — 筆跡を上に 10px 移動</td></tr>
+					<tr><td>⬇️</td><td>下移動 — 筆跡を下に 10px 移動</td></tr>
+					<tr><td>🎯</td><td>上下左右中央揃え — 筆跡を字身枠の中央に自動配置</td></tr>
+					<tr><td>↩️</td><td>元に戻す — 最後の操作を取り消す（矢印キーも対応）</td></tr>
+					<tr><td>🗄️</td><td>ローカル保存 — すぐにブラウザのローカルに保存</td></tr>
+					<tr class="guide-section"><td colspan="2">ナビバー</td></tr>
+					<tr><td>💡</td><td>ヒント — 使い方説明とバージョン情報を表示</td></tr>
+					<tr><td>⚙️</td><td>フォント設定 — フォント名・グリッド・スケール等を変更</td></tr>
+					<tr><td>数字</td><td>完成字符数 — 書き終えた字符の数を表示</td></tr>
+					<tr><td>💾</td><td>ダウンロード — OTFファイルの出力やデータのバックアップ</td></tr>
+				</tbody>
+			</table>
+			<p class="dummy"></p>
+		</div>
+	</div>
+
 	<div id="progress-container">
 		<progress id="progress-bar" value="0" max="100"></progress>
 		<span id="progress-text">0%</span>
@@ -169,10 +211,22 @@
 			<br />
 			<hr />
 			<h3>バックアップデータの読み込み</h3>
-			<input type="file" id="importDataFile" accept=".txt" />
+			<span class="note">複数のバックアップファイルを同時に選択して結合読み込みできます</span><br />
+			<input type="file" id="importDataFile" accept=".txt" multiple />
+			<br />
+			<h3>手動保存</h3>
+			<span class="note">画面下部の 🗄️ ボタンをタップするとすぐに保存できます。</span>
 			<br />
 			<h3>データをバックアップする</h3>
 			<button id="exportDataButton">作業中のデータをDL</button>
+			<br />
+			<hr />
+			<h3>ローカル自動バックアップ</h3>
+			<span class="note">バインド後は描画のたびにローカルファイルへ自動バックアップされます（Chrome・Edge のみ）</span><br>
+			<span id="userFileStatus"></span><br>
+			<button id="bindUserFileButton">ローカルファイルをバインド</button>
+			<button id="unbindUserFileButton" hidden>バインド解除</button>
+			<button id="reauthorizeUserFileButton" hidden>再認証</button>
 			<br />
 			<p class="dummy"></p>
 		</div>
@@ -191,10 +245,21 @@
 			notFound: '該当グリフが見つかりません。',
 			confirmAdd: 'ユーザー文字リストに追加しますか？',
 			noDataToExport: 'データがありません。',
-			importConfirm: '編集中のデータが削除されます。データの読み込みしますか？',
+			importModeConfirm: '既存のデータを上書きしますか？\n（OK = 削除して読み込み、キャンセル = 既存データに追加）',
+			importConfirm: '現在のデータをすべて削除してから読み込みますか？',
+			importMergeConfirm: '選択したファイルを既存データに追加読み込みしますか？',
 			importDone: '読み込みしました',
 			clearConfirm: '編集中のデータを破棄しますか？',
 			clearDone: '削除しました',
+			manualSaveBtn: '🗄️',
+			saving: '⏳',
+			saveDone: '✅',
+			saveFailed: '❌',
+			localFileUnbound: '未バインド',
+			localFileBoundPrefix: 'バインド中：',
+			localFileNeedReauth: '再認証が必要：',
+			localFileBoundDone: 'バインドしました！以降は描画のたびに自動バックアップされます。',
+			localFileUnsupported: 'お使いのブラウザはこの機能に対応していません。ChromeまたはEdgeをご利用ください。',
 			welcomeTitle: 'ようこそ',
 			settingsTitle: 'フォント設定',
 			inAppNotice: 'アプリの組み込みブラウザを利用しているようです。\nシステムブラウザで開くことがおすすめです。',

@@ -84,3 +84,8 @@ canvas { position: absolute; top: 0; left: 0; width: 360px; height: 360px; touch
 
 #hintContent { padding: 0 1.2em }
 #hintContent li { margin: 10px 0; line-height: 1.6; }
+
+.guide-table { width: 100%; border-collapse: collapse; font-size: 1em; }
+.guide-table td { padding: 8px 10px; vertical-align: middle; line-height: 1.5; border-bottom: 1px solid #444; }
+.guide-table td:first-child { white-space: nowrap; font-size: 1.3em; text-align: center; width: 3.5em; }
+.guide-table tr.guide-section td { background-color: #555; color: #eee; font-size: 0.85em; font-weight: bold; letter-spacing: 0.05em; padding: 6px 10px; border-bottom: none; }
