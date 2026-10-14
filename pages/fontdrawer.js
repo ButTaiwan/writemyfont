@@ -62,6 +62,21 @@ function saveToDB(key, value) {
 	});
 }
 
+// 批次匯入 IndexedDB：清空＋寫入全部在「單一交易」內完成（具原子性）。
+// 大量資料時遠快於逐筆各開一個交易；任何一筆失敗（如 QuotaExceededError）整批回滾，
+// 不會留下只匯入一半的資料。
+function importAllToDB(entries) {
+	return new Promise((resolve, reject) => {
+		const transaction = db.transaction([storeName], 'readwrite');
+		const store = transaction.objectStore(storeName);
+		store.clear();
+		for (const [key, value] of entries) store.put({ key, value });
+		transaction.oncomplete = () => resolve(entries.length);
+		transaction.onerror = () => reject(transaction.error);
+		transaction.onabort = () => reject(transaction.error || new Error('transaction aborted'));
+	});
+}
+
 // 從 IndexedDB 讀取資料
 function loadFromDB(key, defaultValue = null) {
 	return new Promise((resolve, reject) => {
@@ -1268,19 +1283,31 @@ $(document).ready(async function () {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = async function (e) {
-                    await clearDB(); // 清除現有的 IndexedDB 資料
-                    const data = e.target.result;
-                    const lines = data.split('\n');
-                    for (const line of lines) {
-                        if (line.trim() === '') continue; // 跳過空行
-                        const parts = line.split('\t');
-                        if (parts.length < 2) continue; // 如果格式不正確，跳過
-                        const key = parts[0].trim();
-                        const value = parts[1].trim();
-                        await saveToDB(key, value);
+                    try {
+                        const data = e.target.result;
+                        const entries = [];
+                        for (const line of data.split(/\r?\n/)) { // 同時處理 \n 與 \r\n
+                            if (line === '') continue; // 跳過空行
+                            const tab = line.indexOf('\t');
+                            if (tab < 0) continue; // 格式不正確則跳過
+                            // 僅以第一個 tab 切 key/value，value 內含任何字元都安全
+                            entries.push([line.slice(0, tab).trim(), line.slice(tab + 1)]);
+                        }
+                        // 清空＋寫入在單一交易內完成；失敗會整批回滾，不會只匯入一半
+                        const n = await importAllToDB(entries);
+                        console.log('匯入完成，共 ' + n + ' 筆');
+                        alert(fdrawer.importDone);
+                        location.reload(); // 重新載入頁面
+                    } catch (err) {
+                        console.error('匯入失敗', err);
+                        alert(err && err.name === 'QuotaExceededError'
+                            ? '瀏覽器 IndexedDB 儲存空間不足，請清除其他網站資料或改用較小的備份檔。'
+                            : '匯入失敗：' + (err && (err.message || err.name) || err));
                     }
-                    alert(fdrawer.importDone);
-                    location.reload(); // 重新載入頁面
+                };
+                reader.onerror = function () {
+                    console.error('讀取檔案失敗', reader.error);
+                    alert('讀取檔案失敗：' + (reader.error && reader.error.message || reader.error));
                 };
                 reader.readAsText(file);
             }
